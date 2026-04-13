@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<!-- saved from url=(0042)http://127.0.0.1:5500/soro-tu-ru/home.html -->
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>南大泉そろばん教室 〜大会練習用〜</title>
+    <style>
+        body {
+            font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+        header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        .main-content {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .competition-section {
+            margin-bottom: 50px;
+        }
+        .competition-title {
+            font-size: 22px;
+            border-left: 6px solid #1e40af;
+            padding-left: 15px;
+            margin-bottom: 20px;
+            color: #0f172a;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100px;
+            text-align: center;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+        }
+        .card h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #1e40af;
+        }
+        .card .description {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 8px;
+        }
+        .footer {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>南大泉そろばん教室</h1>
+    <p>〜大会練習用問題作成ポータル〜</p>
+</header>
+
+<div class="main-content">
+
+    <section class="competition-section">
+        <h2 class="competition-title">🏆 東京珠算選手権大会</h2>
+        <div class="grid">
+            <a href="http://127.0.0.1:5500/soro-tu-ru/index2.html" class="card">
+                <h3>高校・一般の部</h3>
+                <div class="description">最上位レベルの競技問題</div>
+            </a>
+            <a href="http://127.0.0.1:5500/soro-tu-ru/tokyo-junior.html" class="card">
+                <h3>中学生の部</h3>
+                <div class="description">中学生向け競技問題</div>
+            </a>
+            <a href="http://127.0.0.1:5500/soro-tu-ru/tokyo-elementary.html" class="card">
+                <h3>小学生の部</h3>
+                <div class="description">小学生向け競技問題</div>
+            </a>
+        </div>
+    </section>
+
+    <section class="competition-section">
+        <h2 class="competition-title">🏆 全関東珠算選手権大会</h2>
+        <div class="grid">
+            <a href="http://127.0.0.1:5500/soro-tu-ru/kanto-general.html" class="card">
+                <h3>高校・一般の部</h3>
+                <div class="description">全関東ルールに準拠</div>
+            </a>
+            <a href="http://127.0.0.1:5500/soro-tu-ru/kanto-junior.html" class="card">
+                <h3>中学生の部</h3>
+                <div class="description">全関東ルールに準拠</div>
+            </a>
+            <a href="http://127.0.0.1:5500/soro-tu-ru/kanto-elementary.html" class="card">
+                <h3>小学生の部</h3>
+                <div class="description">全関東ルールに準拠</div>
+            </a>
+        </div>
+    </section>
+
+</div>
+
+<div class="footer">
+    © 2026 南大泉そろばん教室 大会特訓プロジェクト
+</div>
+
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+
+</body></html>
