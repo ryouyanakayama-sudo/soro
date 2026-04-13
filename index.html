@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<!-- saved from url=(0044)http://127.0.0.1:5500/soro-tu-ru/index2.html -->
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <title>そろばん総合競技ツール（レイアウト完全版）</title>
+    <style>
+        @font-face {
+            font-family: 'ABACUS2';
+            src: local('ABACUS2'), url('ABACUS2.ttf') format('truetype');
+        }
+
+        body { font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif; margin: 0; background: #f3f3f3; color: #333; }
+        header { background: #333; color: #fff; padding: 10px 20px; font-size: 20px; display: flex; justify-content: space-between; align-items: center; }
+        
+        #app-container { display: flex; gap: 20px; padding: 20px; box-sizing: border-box; align-items: flex-start; max-width: 1400px; margin: 0 auto; }
+
+        .panel { 
+            background: #fff; border-radius: 8px; padding: 20px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 280px; flex-shrink: 0; 
+            box-sizing: border-box; position: sticky; top: 20px; 
+        }
+        .panel h3 { margin-top: 0; font-size: 16px; border-bottom: 2px solid #ddd; padding-bottom: 8px; }
+        .panel label { display: block; margin-top: 15px; margin-bottom: 5px; font-size: 13px; font-weight: bold; }
+        
+        .btn { display: block; width: 100%; padding: 10px; margin-top: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.8; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-print { background: #6c757d; color: white; }
+        .btn-answer { background: #28a745; color: white; }
+        .btn-weakness { background: #ffc107; color: #333; border: 1px solid #e0a800; }
+        
+        .btn-wrong { background: #fff0f0; border: 1px solid #ff9999; color: #d00; padding: 1px 3px; cursor: pointer; border-radius: 3px; font-size: 9px; margin-left: 4px; vertical-align: middle; }
+        .btn-wrong.saved { background: #888; border-color: #666; color: #fff; cursor: default; }
+
+        .sheet-wrapper { flex: 1; background: #e0e0e0; padding: 20px; overflow: auto; max-height: calc(100vh - 80px); border-radius: 4px; }
+        
+        .sheet { 
+            background: #fff; margin: 0 auto 30px auto; 
+            width: 210mm; height: 297mm;
+            padding: 12mm 10mm; 
+            border: 1px solid #ccc; box-sizing: border-box; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sheet-header { border-bottom: 2px solid #000; margin-bottom: 5px; padding-bottom: 2mm; text-align: center; font-weight: bold; font-size: 18pt; letter-spacing: 2px; flex-shrink: 0; }
+        .sub-header { text-align: center; font-size: 12pt; margin-bottom: 3mm; border-bottom: 1px solid #000; padding-bottom: 1mm; font-weight: bold; flex-shrink: 0; }
+        
+        .abacus-font { font-family: 'ABACUS2', monospace; letter-spacing: 0px; }
+        .symbol-font { font-family: Arial, sans-serif; margin: 0 1px; font-size: 11pt; } 
+        .diff-mark { color: red; font-size: 10px; vertical-align: super; font-weight: bold; }
+
+        .calc-wrapper { display: flex; justify-content: space-between; flex: 1; border-bottom: 1px solid #000; }
+        .calc-col { width: 49.5%; display: flex; flex-direction: column; border-top: 1px solid #000; } 
+        
+        .column-label { 
+            font-size: 8.5pt; 
+            text-align: right; 
+            padding-right: 5mm; 
+            font-weight: bold; 
+            height: 6mm; 
+            line-height: 6mm; 
+            background: #f8f8f8;
+            border-bottom: 1px solid #000;
+            border-left: 1px solid #000;
+            border-right: 1px solid #000;
+            flex-shrink: 0;
+        }
+
+        .problem-row-kw { flex: 1; display: flex; border-bottom: 1px solid #000; border-left: 1px solid #000; border-right: 1px solid #000; align-items: center; overflow: hidden; }
+        .prob-idx { width: 8.5mm; height: 100%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 10.5pt; border-right: 1px solid #000; font-weight: bold; flex-shrink: 0; }
+        
+        .prob-text { flex-grow: 1; text-align: left; padding-left: 1.5mm; font-size: 10pt; white-space: nowrap; overflow: visible; letter-spacing: -0.5px; }
+        
+        .ans-space { width: 35mm; height: 100%; flex-shrink: 0; }
+
+        .mitori-wrapper {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 4mm;
+            flex: 1; 
+        }
+
+        #anzan-area {
+            margin-bottom: 30mm; 
+        }
+
+        .mitori-box { border: 1px solid #000; display: grid; grid-template-rows: 6mm 1fr 10mm; height: 100%; box-sizing: border-box; }
+        .mitori-idx { background: #e0e0e0; text-align: center; border-bottom: 1px solid #000; line-height: 6mm; font-size: 9pt; font-weight: bold; display: flex; justify-content: space-around; align-items: center;}
+        
+        .mitori-body { 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-end;
+            align-items: flex-end;
+            padding: 0 2mm 0 0;
+            overflow: hidden;
+        }
+        
+        .m-row { 
+            font-family: 'ABACUS2', monospace;
+            font-size: 13pt; 
+            line-height: 1.1; 
+            letter-spacing: -1px; 
+            white-space: nowrap; 
+            margin: 0;
+            padding: 0;
+        }
+        
+        .mitori-anzan .m-row { font-size: 14pt; line-height: 1.15; }
+        .m-ans-area { border-top: 1px solid #000; width: 100%; }
+        
+        .fingering-count { font-size: 8.5px; color: #555; font-weight: normal; }
+
+        .score-box { 
+            position: absolute; 
+            bottom: 12mm; 
+            right: 10mm;  
+            width: 100mm; 
+            background: #fff; 
+            border: 2px solid #000; 
+            z-index: 10; 
+        }
+        .score-table { width: 100%; border-collapse: collapse; font-size: 11pt; text-align: center; }
+        .score-table th, .score-table td { border: 1px solid #000; padding: 6px 0; }
+        .score-table th { background: #f0f0f0; font-weight: bold; width: 20%; }
+
+        .master-ans-table { width: 100%; border-collapse: collapse; font-size: 11pt; margin-top: 2mm; }
+        .master-ans-table th, .master-ans-table td { border: 1px solid #000; padding: 1px 4px; text-align: right; height: 7.8mm; }
+        .master-ans-table th { background: #f0f0f0; text-align: center; font-weight: bold; height: 8.5mm; }
+        .col-idx { text-align: center !important; background: #fafafa; width: 10mm; font-weight: bold; }
+        .ans-val { font-family: 'ABACUS2', monospace; font-size: 12pt; color: #0055aa; vertical-align: middle; }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
+        @media print {
+            body { background: #fff; margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
+            header, .panel { display: none !important; }
+            #app-container { padding: 0; margin: 0; display: block; max-width: none; }
+            .sheet-wrapper { background: #fff; padding: 0; margin: 0; max-height: none; overflow: visible; }
+            .sheet { width: 210mm; height: 297mm; margin: 0; border: none; box-shadow: none; page-break-after: always; padding: 10mm 10mm; }
+            .sheet:last-child { page-break-after: auto; }
+            .view-section { display: none !important; }
+            .view-section.active { display: block !important; }
+            .diff-mark, .btn-wrong { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <span>🧮 そろばん作問ツール（レイアウト完全版）</span>
+</header>
+
+<div id="app-container">
+    <div class="panel">
+        <div id="control-problem">
+            <h3>設定メニュー</h3>
+            <button id="generateBtn" class="btn btn-primary" onclick="generateAll()">🔄 全種目 新規作成</button>
+            <button onclick="window.print()" class="btn btn-print">🖨️ 問題を印刷</button>
+            <button id="toAnswerBtn" class="btn btn-answer" onclick="switchView(&#39;answer&#39;)">📝 解答・弱点登録へ</button>
+            
+            <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
+            
+            <label>弱点復習機能</label>
+            <button class="btn btn-weakness" onclick="generateFromMistakes()">登録した弱点から作成</button>
+            <div style="font-size:12px; margin-top:8px;">
+                登録数 (か/わ/み/暗):<br>
+                <b id="countMul">0</b> / <b id="countDiv">0</b> / <b id="countMit">0</b> / <b id="countAnz">0</b>
+                <a href="http://127.0.0.1:5500/soro-tu-ru/index2.html#" onclick="clearAllMistakes()" style="color:#d00; margin-left:10px; float:right;">[リセット]</a>
+            </div>
+        </div>
+
+        <div id="control-answer" style="display:none;">
+            <h3>解答メニュー</h3>
+            <button class="btn btn-print" style="background:#666;" onclick="switchView(&#39;problem&#39;)">🔙 問題に戻る</button>
+            <button onclick="window.print()" class="btn btn-print">🖨️ 解答表を印刷</button>
+        </div>
+    </div>
+
+    <section class="sheet-wrapper">
+        <div id="view-problem" class="view-section active">
+            
+            <div class="sheet">
+                <div class="sheet-header">打倒MAX～東京珠算選手権～</div>
+                <div class="sub-header">乗算 (制限時間 5分)</div>
+                <div class="calc-wrapper">
+                    <div class="calc-col" id="kake-left"><div class="column-label">小数第三位未満四捨五入</div><div class="problem-row-kw"><div class="prob-idx">1</div><div class="prob-text"><span class="abacus-font">0.083773</span><span class="symbol-font">×</span><span class="abacus-font">0.858</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">2</div><div class="prob-text"><span class="abacus-font">712</span><span class="symbol-font">×</span><span class="abacus-font">333,151</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">3</div><div class="prob-text"><span class="abacus-font">936</span><span class="symbol-font">×</span><span class="abacus-font">219,207</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">4</div><div class="prob-text"><span class="abacus-font">64.6</span><span class="symbol-font">×</span><span class="abacus-font">8,736.39</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">5</div><div class="prob-text"><span class="abacus-font">7,835.6</span><span class="symbol-font">×</span><span class="abacus-font">3.915</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">6</div><div class="prob-text"><span class="abacus-font">847.003</span><span class="symbol-font">×</span><span class="abacus-font">0.668</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">7</div><div class="prob-text"><span class="abacus-font">827</span><span class="symbol-font">×</span><span class="abacus-font">516,334</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">8</div><div class="prob-text"><span class="abacus-font">87,149</span><span class="symbol-font">×</span><span class="abacus-font">5,729</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">9</div><div class="prob-text"><span class="abacus-font">4,765</span><span class="symbol-font">×</span><span class="abacus-font">54,578</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">10</div><div class="prob-text"><span class="abacus-font">691</span><span class="symbol-font">×</span><span class="abacus-font">0.182529</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div></div>
+                    <div class="calc-col" id="kake-right"><div class="column-label">整数位未満四捨五入</div><div class="problem-row-kw"><div class="prob-idx">11</div><div class="prob-text"><span class="abacus-font">82.13</span><span class="symbol-font">×</span><span class="abacus-font">38.601</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">12</div><div class="prob-text"><span class="abacus-font">7.57</span><span class="symbol-font">×</span><span class="abacus-font">90,034.4</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">13</div><div class="prob-text"><span class="abacus-font">832</span><span class="symbol-font">×</span><span class="abacus-font">982,005</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">14</div><div class="prob-text"><span class="abacus-font">325,764</span><span class="symbol-font">×</span><span class="abacus-font">439</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">15</div><div class="prob-text"><span class="abacus-font">90,098</span><span class="symbol-font">×</span><span class="abacus-font">8,338</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">16</div><div class="prob-text"><span class="abacus-font">4,037.3</span><span class="symbol-font">×</span><span class="abacus-font">9.455</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">17</div><div class="prob-text"><span class="abacus-font">3,402</span><span class="symbol-font">×</span><span class="abacus-font">62,522</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">18</div><div class="prob-text"><span class="abacus-font">885,799</span><span class="symbol-font">×</span><span class="abacus-font">481</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">19</div><div class="prob-text"><span class="abacus-font">46,525</span><span class="symbol-font">×</span><span class="abacus-font">4,025</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">20</div><div class="prob-text"><span class="abacus-font">391</span><span class="symbol-font">×</span><span class="abacus-font">452,678</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div></div>
+                </div>
+            </div>
+
+            <div class="sheet">
+                <div class="sheet-header">打倒MAX～東京珠算選手権～</div>
+                <div class="sub-header">除算 (制限時間 5分)</div>
+                <div class="calc-wrapper">
+                    <div class="calc-col" id="wari-left"><div class="column-label">小数第三位未満四捨五入</div><div class="problem-row-kw"><div class="prob-idx">1</div><div class="prob-text"><span class="abacus-font">64,923,246</span><span class="symbol-font">÷</span><span class="abacus-font">678</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">2</div><div class="prob-text"><span class="abacus-font">6,569,478</span><span class="symbol-font">÷</span><span class="abacus-font">57,627</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">3</div><div class="prob-text"><span class="abacus-font">0.1897785</span><span class="symbol-font">÷</span><span class="abacus-font">0.3495</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">4</div><div class="prob-text"><span class="abacus-font">41.229915</span><span class="symbol-font">÷</span><span class="abacus-font">64.929</span><span class="diff-mark">★</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">5</div><div class="prob-text"><span class="abacus-font">0.0978499</span><span class="symbol-font">÷</span><span class="abacus-font">0.24835</span><span class="diff-mark">★</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">6</div><div class="prob-text"><span class="abacus-font">0.06558872</span><span class="symbol-font">÷</span><span class="abacus-font">0.28271</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">7</div><div class="prob-text"><span class="abacus-font">0.78795</span><span class="symbol-font">÷</span><span class="abacus-font">9.27</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">8</div><div class="prob-text"><span class="abacus-font">11,461,692</span><span class="symbol-font">÷</span><span class="abacus-font">186</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">9</div><div class="prob-text"><span class="abacus-font">41,579,538</span><span class="symbol-font">÷</span><span class="abacus-font">759</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">10</div><div class="prob-text"><span class="abacus-font">1,337,836.5</span><span class="symbol-font">÷</span><span class="abacus-font">23,595</span><span class="diff-mark">K</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div></div>
+                    <div class="calc-col" id="wari-right"><div class="column-label">整数位未満四捨五入</div><div class="problem-row-kw"><div class="prob-idx">11</div><div class="prob-text"><span class="abacus-font">26,757</span><span class="symbol-font">÷</span><span class="abacus-font">3.375</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">12</div><div class="prob-text"><span class="abacus-font">14,265.668</span><span class="symbol-font">÷</span><span class="abacus-font">0.428</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">13</div><div class="prob-text"><span class="abacus-font">24,491,374</span><span class="symbol-font">÷</span><span class="abacus-font">45,523</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">14</div><div class="prob-text"><span class="abacus-font">865,113.6</span><span class="symbol-font">÷</span><span class="abacus-font">1,386.4</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">15</div><div class="prob-text"><span class="abacus-font">269,987.16</span><span class="symbol-font">÷</span><span class="abacus-font">8.44</span><span class="diff-mark">K</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">16</div><div class="prob-text"><span class="abacus-font">398,475.87</span><span class="symbol-font">÷</span><span class="abacus-font">0.47</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">17</div><div class="prob-text"><span class="abacus-font">861.9</span><span class="symbol-font">÷</span><span class="abacus-font">2.7625</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">18</div><div class="prob-text"><span class="abacus-font">98,421.84</span><span class="symbol-font">÷</span><span class="abacus-font">3.74</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">19</div><div class="prob-text"><span class="abacus-font">6,993,982.8</span><span class="symbol-font">÷</span><span class="abacus-font">766.8</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">20</div><div class="prob-text"><span class="abacus-font">46,489.58</span><span class="symbol-font">÷</span><span class="abacus-font">3.61</span><span class="diff-mark">K</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div></div>
+                </div>
+            </div>
+
+            <div class="sheet">
+                <div class="sheet-header">打倒MAX～東京珠算選手権～</div>
+                <div class="sub-header">みとり算 (制限時間 5分)</div>
+                <div class="mitori-wrapper mitori-normal" id="mitori-area"><div class="mitori-box">
+            <div class="mitori-idx"><span>1</span> <span class="fingering-count">[指:71]</span></div>
+            <div class="mitori-body"><div class="m-row">62,275</div><div class="m-row">41,509</div><div class="m-row">267,591</div><div class="m-row">-857,893</div><div class="m-row">-209,899</div><div class="m-row">236,564</div><div class="m-row">37,428</div><div class="m-row">56,102</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>2</span> <span class="fingering-count">[指:61]</span></div>
+            <div class="mitori-body"><div class="m-row">81,061</div><div class="m-row">572,948</div><div class="m-row">-43,001</div><div class="m-row">78,692</div><div class="m-row">294,070</div><div class="m-row">865,123</div><div class="m-row">40,142</div><div class="m-row">-133,057</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>3</span> <span class="fingering-count">[指:64]</span></div>
+            <div class="mitori-body"><div class="m-row">744,735</div><div class="m-row">-38,083</div><div class="m-row">80,739</div><div class="m-row">93,641</div><div class="m-row">-10,842</div><div class="m-row">416,776</div><div class="m-row">973,282</div><div class="m-row">581,640</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>4</span> <span class="fingering-count">[指:67]</span></div>
+            <div class="mitori-body"><div class="m-row">2,676</div><div class="m-row">-6,375</div><div class="m-row">-77,738</div><div class="m-row">980,540</div><div class="m-row">18,455</div><div class="m-row">525,877</div><div class="m-row">-3,250,992</div><div class="m-row">5,859,038</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>5</span> <span class="fingering-count">[指:68]</span></div>
+            <div class="mitori-body"><div class="m-row">80,701</div><div class="m-row">36,407</div><div class="m-row">475,999</div><div class="m-row">54,027</div><div class="m-row">400,520</div><div class="m-row">65,091</div><div class="m-row">905,217</div><div class="m-row">616,835</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>6</span> <span class="fingering-count">[指:76]</span></div>
+            <div class="mitori-body"><div class="m-row">957,112</div><div class="m-row">47,153</div><div class="m-row">770,898</div><div class="m-row">-378,392</div><div class="m-row">67,779</div><div class="m-row">-23,463</div><div class="m-row">500,249</div><div class="m-row">-77,196</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>7</span> <span class="fingering-count">[指:65]</span></div>
+            <div class="mitori-body"><div class="m-row">64,260</div><div class="m-row">-12,053</div><div class="m-row">682,527</div><div class="m-row">58,762</div><div class="m-row">-758,085</div><div class="m-row">76,636</div><div class="m-row">500,252</div><div class="m-row">787,181</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>8</span> <span class="fingering-count">[指:77]</span></div>
+            <div class="mitori-body"><div class="m-row">110,365</div><div class="m-row">62,267</div><div class="m-row">681,663</div><div class="m-row">880,941</div><div class="m-row">59,944</div><div class="m-row">92,369</div><div class="m-row">21,713</div><div class="m-row">924,440</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>9</span> <span class="fingering-count">[指:76]</span></div>
+            <div class="mitori-body"><div class="m-row">32,123</div><div class="m-row">62,984</div><div class="m-row">555,961</div><div class="m-row">838,354</div><div class="m-row">71,584</div><div class="m-row">402,457</div><div class="m-row">86,695</div><div class="m-row">660,107</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>10</span> <span class="fingering-count">[指:76]</span></div>
+            <div class="mitori-body"><div class="m-row">987,974</div><div class="m-row">66,633</div><div class="m-row">-70,177</div><div class="m-row">70,689</div><div class="m-row">917,077</div><div class="m-row">931,739</div><div class="m-row">-123,130</div><div class="m-row">34,568</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>11</span> <span class="fingering-count">[指:73]</span></div>
+            <div class="mitori-body"><div class="m-row">93,335</div><div class="m-row">6,502,928</div><div class="m-row">390,210</div><div class="m-row">639,559</div><div class="m-row">7,211,698</div><div class="m-row">33,105</div><div class="m-row">9,404</div><div class="m-row">5,433</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>12</span> <span class="fingering-count">[指:72]</span></div>
+            <div class="mitori-body"><div class="m-row">2,496,981</div><div class="m-row">3,294,736</div><div class="m-row">813,620</div><div class="m-row">1,057</div><div class="m-row">320,983</div><div class="m-row">91,206</div><div class="m-row">5,557</div><div class="m-row">40,207</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>13</span> <span class="fingering-count">[指:85]</span></div>
+            <div class="mitori-body"><div class="m-row">12,796</div><div class="m-row">298,487</div><div class="m-row">-60,294</div><div class="m-row">728,634</div><div class="m-row">-37,342</div><div class="m-row">44,259</div><div class="m-row">764,135</div><div class="m-row">776,860</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>14</span> <span class="fingering-count">[指:74]</span></div>
+            <div class="mitori-body"><div class="m-row">781,794</div><div class="m-row">70,298</div><div class="m-row">410,378</div><div class="m-row">112,116</div><div class="m-row">79,997</div><div class="m-row">292,177</div><div class="m-row">28,474</div><div class="m-row">12,506</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>15</span> <span class="fingering-count">[指:71]</span></div>
+            <div class="mitori-body"><div class="m-row">93,081</div><div class="m-row">72,553</div><div class="m-row">-731,424</div><div class="m-row">379,936</div><div class="m-row">-491,599</div><div class="m-row">-735,925</div><div class="m-row">76,510</div><div class="m-row">32,229</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>16</span> <span class="fingering-count">[指:61]</span></div>
+            <div class="mitori-body"><div class="m-row">45,965</div><div class="m-row">31,911</div><div class="m-row">-444,503</div><div class="m-row">-189,701</div><div class="m-row">-20,011</div><div class="m-row">75,031</div><div class="m-row">444,805</div><div class="m-row">568,867</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>17</span> <span class="fingering-count">[指:70]</span></div>
+            <div class="mitori-body"><div class="m-row">9,177,743</div><div class="m-row">4,070</div><div class="m-row">30,460</div><div class="m-row">2,956</div><div class="m-row">3,295,287</div><div class="m-row">57,231</div><div class="m-row">151,497</div><div class="m-row">273,474</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>18</span> <span class="fingering-count">[指:70]</span></div>
+            <div class="mitori-body"><div class="m-row">5,699</div><div class="m-row">4,001,633</div><div class="m-row">64,116</div><div class="m-row">146,563</div><div class="m-row">674,540</div><div class="m-row">6,501,521</div><div class="m-row">5,326</div><div class="m-row">13,475</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>19</span> <span class="fingering-count">[指:75]</span></div>
+            <div class="mitori-body"><div class="m-row">67,397</div><div class="m-row">-33,491</div><div class="m-row">-460,306</div><div class="m-row">882,437</div><div class="m-row">67,658</div><div class="m-row">26,666</div><div class="m-row">869,862</div><div class="m-row">-468,894</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
+            <div class="mitori-idx"><span>20</span> <span class="fingering-count">[指:70]</span></div>
+            <div class="mitori-body"><div class="m-row">18,617</div><div class="m-row">84,520</div><div class="m-row">850,312</div><div class="m-row">962,317</div><div class="m-row">73,039</div><div class="m-row">435,703</div><div class="m-row">176,679</div><div class="m-row">15,324</div></div><div class="m-ans-area"></div></div></div>
+            </div>
+
+            <div class="sheet">
+                <div class="sheet-header">打倒MAX～東京珠算選手権～</div>
+                <div class="sub-header">暗算 (制限時間 1分30秒)</div>
+                <div class="mitori-wrapper mitori-anzan" id="anzan-area"><div class="mitori-box"><div class="mitori-idx">1</div><div class="mitori-body"><div class="m-row">68</div><div class="m-row">86</div><div class="m-row">897</div><div class="m-row">364</div><div class="m-row">557</div><div class="m-row">467</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">2</div><div class="mitori-body"><div class="m-row">148</div><div class="m-row">326</div><div class="m-row">641</div><div class="m-row">662</div><div class="m-row">95</div><div class="m-row">11</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">3</div><div class="mitori-body"><div class="m-row">912</div><div class="m-row">636</div><div class="m-row">232</div><div class="m-row">594</div><div class="m-row">24</div><div class="m-row">49</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">4</div><div class="mitori-body"><div class="m-row">957</div><div class="m-row">265</div><div class="m-row">33</div><div class="m-row">-430</div><div class="m-row">-627</div><div class="m-row">28</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">5</div><div class="mitori-body"><div class="m-row">93</div><div class="m-row">771</div><div class="m-row">740</div><div class="m-row">54</div><div class="m-row">180</div><div class="m-row">637</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">6</div><div class="mitori-body"><div class="m-row">56</div><div class="m-row">934</div><div class="m-row">111</div><div class="m-row">-311</div><div class="m-row">22</div><div class="m-row">-503</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">7</div><div class="mitori-body"><div class="m-row">62</div><div class="m-row">-39</div><div class="m-row">563</div><div class="m-row">131</div><div class="m-row">505</div><div class="m-row">-556</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">8</div><div class="mitori-body"><div class="m-row">928</div><div class="m-row">92</div><div class="m-row">-189</div><div class="m-row">-308</div><div class="m-row">283</div><div class="m-row">26</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">9</div><div class="mitori-body"><div class="m-row">841</div><div class="m-row">81</div><div class="m-row">744</div><div class="m-row">990</div><div class="m-row">861</div><div class="m-row">22</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">10</div><div class="mitori-body"><div class="m-row">66</div><div class="m-row">-934</div><div class="m-row">536</div><div class="m-row">432</div><div class="m-row">911</div><div class="m-row">-13</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">11</div><div class="mitori-body"><div class="m-row">253</div><div class="m-row">181</div><div class="m-row">903</div><div class="m-row">81</div><div class="m-row">350</div><div class="m-row">52</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">12</div><div class="mitori-body"><div class="m-row">875</div><div class="m-row">992</div><div class="m-row">73</div><div class="m-row">902</div><div class="m-row">46</div><div class="m-row">822</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">13</div><div class="mitori-body"><div class="m-row">473</div><div class="m-row">331</div><div class="m-row">748</div><div class="m-row">11</div><div class="m-row">138</div><div class="m-row">59</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">14</div><div class="mitori-body"><div class="m-row">430</div><div class="m-row">436</div><div class="m-row">224</div><div class="m-row">800</div><div class="m-row">94</div><div class="m-row">90</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">15</div><div class="mitori-body"><div class="m-row">460</div><div class="m-row">23</div><div class="m-row">20</div><div class="m-row">767</div><div class="m-row">793</div><div class="m-row">654</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">16</div><div class="mitori-body"><div class="m-row">164</div><div class="m-row">78</div><div class="m-row">-272</div><div class="m-row">-776</div><div class="m-row">32</div><div class="m-row">907</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">17</div><div class="mitori-body"><div class="m-row">54</div><div class="m-row">124</div><div class="m-row">835</div><div class="m-row">49</div><div class="m-row">662</div><div class="m-row">972</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">18</div><div class="mitori-body"><div class="m-row">28</div><div class="m-row">351</div><div class="m-row">926</div><div class="m-row">-89</div><div class="m-row">-129</div><div class="m-row">434</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">19</div><div class="mitori-body"><div class="m-row">781</div><div class="m-row">785</div><div class="m-row">-546</div><div class="m-row">883</div><div class="m-row">39</div><div class="m-row">-51</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">20</div><div class="mitori-body"><div class="m-row">283</div><div class="m-row">419</div><div class="m-row">62</div><div class="m-row">615</div><div class="m-row">564</div><div class="m-row">80</div></div><div class="m-ans-area"></div></div></div>
+                <div class="score-box">
+                    <table class="score-table">
+                        <tbody><tr><th>乗　算</th><th>除　算</th><th>見取算</th><th>暗　算</th><th style="border-top:2px solid #000;">合　計</th></tr>
+                        <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td style="border-top:2px solid #000;">&nbsp;</td></tr>
+                    </tbody></table>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-answer" class="view-section">
+            <div class="sheet">
+                <div class="sheet-header">総 合 解 答 表</div>
+                <table class="master-ans-table">
+                    <thead>
+                        <tr>
+                            <th class="col-idx">No.</th>
+                            <th style="width:23%;">乗算</th>
+                            <th style="width:23%;">除算</th>
+                            <th style="width:23%;">見取算</th>
+                            <th style="width:23%;">暗算</th>
+                        </tr>
+                    </thead>
+                    <tbody id="answer-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+/* =========================================================================
+   共通ユーティリティ
+   ========================================================================= */
+const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const roundTo = (num, decimals) => { const f = Math.pow(10, decimals); return Math.round(num * f) / f; };
+const intDigits = (num) => Math.floor(Math.abs(num)).toString().length;
+
+const addCommas = (num) => {
+    let str = String(num);
+    let sign = str.startsWith('-') ? '-' : '';
+    if (sign) str = str.substring(1);
+    let parts = str.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return sign + parts.join('.');
+};
+
+const getSorobanDigits = (s) => {
+    let clean = String(s).replace(/^-/, '').replace(/,/g, '');
+    if (!clean.includes('.')) return clean.replace(/^0+/, '').length || 1;
+    let parts = clean.split('.');
+    let intPart = parts[0].replace(/^0+/, '');
+    let fracPart = parts[1].replace(/0+$/, '');
+    if (intPart === '') { let firstIdx = fracPart.search(/[1-9]/); return firstIdx === -1 ? 0 : fracPart.length - firstIdx; }
+    return intPart.length + fracPart.length;
+};
+
+let globalData = { mul: [], div: [], mit: [], anz: [] };
+
+/* =========================================================================
+   1. 乗算
+   ========================================================================= */
+let analyzedParams = { internalZeroProb: 0.15, borderlineProb: 0.60, unshiThreshold: 3, forceSmallProb: false };
+const currentDecimalRatio = 80;
+const PATTERNS = [[3,6], [4,5], [5,4], [6,3]];
+const ALL_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const NON_ZERO_DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+function pickDigit(allowZero) { return allowZero ? ALL_DIGITS[randInt(0, 9)] : NON_ZERO_DIGITS[randInt(0, 8)]; }
+function countPatternDigitsFromString(s) { return s.startsWith("0.") ? s.split(".")[1].length : s.replace(".", "").length; }
+function hasInternalDoubleZero(str) {
+    const s = str.replace(/[^\d]/g, "");
+    if (s.length < 4) return false;
+    for (let i = 1; i <= s.length - 3; i++) { if (s[i] === "0" && s[i+1] === "0" && (i+1) < s.length - 1) return true; }
+    return false;
+}
+function isBorderline(num, decimals) {
+    const factor = Math.pow(10, decimals);
+    const shifted = num * factor;
+    const fraction = shifted - Math.floor(shifted);
+    return (fraction >= 0.495 && fraction <= 0.504);
+}
+function getCost3Count(currentVal, addVal) {
+    const sum = currentVal + addVal;
+    if (sum < 10) return 0;
+    if (currentVal >= 5 && (sum - 10) < 5 && [6,7,8,9].includes(currentVal) && [1,2,3,4].includes(addVal)) if (currentVal + addVal === 10) return 1;
+    if ((currentVal === 5 && [6,7,8,9].includes(addVal)) || (currentVal === 6 && [6,7,8].includes(addVal)) || (currentVal === 7 && [6,7].includes(addVal)) || (currentVal === 8 && addVal === 6)) return 1;
+    return 0;
+}
+function calculateUnshiDifficulty(aNum, bNum) {
+    const strA = aNum.toString().replace('.', '');
+    const strB = bNum.toString().replace('.', '');
+    const digitsA = strA.split('').map(Number);
+    const digitsB = strB.split('').map(Number);
+    let rods = new Array(30).fill(0);
+    let cost3Count = 0;
+    for (let i = 0; i < digitsA.length; i++) {
+        const a = digitsA[i]; if (a === 0) continue;
+        for (let j = 0; j < digitsB.length; j++) {
+            const b = digitsB[j]; const product = a * b; if (product === 0) continue;
+            const pos = i + j + 5; 
+            const tens = Math.floor(product / 10); const ones = product % 10;
+            if (tens > 0) { cost3Count += getCost3Count(rods[pos], tens); rods[pos] += tens; while(rods[pos] >= 10) { rods[pos] -= 10; rods[pos-1] += 1; } }
+            const posOne = pos + 1; cost3Count += getCost3Count(rods[posOne], ones); rods[posOne] += ones; while(rods[posOne] >= 10) { rods[posOne] -= 10; rods[posOne-1] += 1; }
+        }
+    }
+    return cost3Count;
+}
+function createHardInteger(d) {
+    while(true) {
+        let digits = [String(pickDigit(false))];
+        for(let i=1; i<d-1; i++) digits.push(String(pickDigit(true)));
+        digits.push(String(pickDigit(false)));
+        if (!digits.join("").endsWith("0")) return digits.join("");
+    }
+}
+function createHardDecimal(d, forceSmall = false) {
+    while(true) {
+        let lessThanOne = forceSmall ? true : (d <= 5 && Math.random() < 0.03);
+        if (!forceSmall && analyzedParams.forceSmallProb && Math.random() < 0.3) lessThanOne = true;
+        let s = "", clean = "";
+        if (lessThanOne) {
+            let frac = "";
+            for(let i=0; i<d; i++) frac += String(pickDigit(i !== d-1));
+            if (/^0+$/.test(frac)) continue;
+            s = "0." + frac; clean = frac;
+        } else {
+            const fLen = randInt(1, Math.min(5, d-1));
+            const iLen = d - fLen;
+            let iStr = String(pickDigit(false));
+            for(let i=1; i<iLen; i++) iStr += String(pickDigit(true));
+            let fStr = "";
+            for(let i=0; i<fLen; i++) fStr += String(pickDigit(i !== fLen-1));
+            s = iStr + "." + fStr; clean = iStr + fStr;
+        }
+        if (clean.length === d && !clean.endsWith("0")) return s;
+    }
+}
+function formatOperand(str) {
+    const parts = str.split(".");
+    const intPart = addCommas(parts[0]);
+    return parts[1] ? intPart + "." + parts[1] : intPart;
+}
+function formatAnswer(num, decimals) {
+    let raw = num.toFixed(decimals);
+    if (decimals > 0 && raw.endsWith("." + "0".repeat(decimals))) raw = String(Math.round(num));
+    if (!raw.includes(".")) return addCommas(raw);
+    raw = raw.replace(/(\.\d*[1-9])0+$/, "$1");
+    const [iStr, dStr] = raw.split(".");
+    return addCommas(iStr) + (dStr ? "." + dStr : "");
+}
+
+function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, forceBothSmall = false, forceBorder = false) {
+    const decimals = isTop ? 3 : 0;
+
+    // forceBothSmall専用パス: 制約を最小限にして軽量生成
+    if (forceBothSmall) {
+        // 約50%の確率で片方を0.0xxx形式にする
+        const makeSmallOperand = (d) => {
+            if (Math.random() < 0.5) {
+                // 0.0xxx: 先頭に0を追加（桁数はd-1の有効桁）
+                return "0.0" + generateNonZeroDigits(Math.max(1, d - 1));
+            } else {
+                return createHardDecimal(d, true); // 0.xxx
+            }
+        };
+        for (let t = 0; t < 10000; t++) {
+            const [dA, dB] = PATTERNS[randInt(0, 3)];
+            const aStr = makeSmallOperand(dA);
+            const bStr = makeSmallOperand(dB);
+            if (parseFloat(aStr) >= 1 || parseFloat(bStr) >= 1) continue;
+            const A = parseFloat(aStr), B = parseFloat(bStr);
+            if (!isFinite(A) || !isFinite(B) || A === 0 || B === 0) continue;
+            const prod = A * B;
+            if (!isFinite(prod) || prod === 0) continue;
+            const rnd = roundTo(prod, decimals);
+            if (!isFinite(rnd) || rnd === 0) continue;
+            const mark = isBorderline(prod, decimals) ? `<span class="diff-mark">★</span>` : '';
+            return {
+                originalText: `${aStr} × ${bStr}`,
+                display: `<span class="abacus-font">${formatOperand(aStr)}</span><span class="symbol-font">×</span><span class="abacus-font">${formatOperand(bStr)}</span>${mark}`,
+                answer: formatAnswer(rnd, decimals)
+            };
+        }
+        // 最終フォールバック: 条件なしで確実に返す
+        const aStr = "0.0" + generateNonZeroDigits(3);
+        const bStr = "0." + generateNonZeroDigits(4);
+        const prod = parseFloat(aStr) * parseFloat(bStr);
+        return {
+            originalText: `${aStr} × ${bStr}`,
+            display: `<span class="abacus-font">${formatOperand(aStr)}</span><span class="symbol-font">×</span><span class="abacus-font">${formatOperand(bStr)}</span>`,
+            answer: formatAnswer(roundTo(prod, decimals), decimals)
+        };
+    }
+
+    // 通常パス
+    const reqBorder = forceBorder ? true : (Math.random() < analyzedParams.borderlineProb);
+    const reqZero = forceSmallB ? false : (Math.random() < analyzedParams.internalZeroProb);
+
+    let tries = 10000;
+    while(tries--) {
+        const [dA, dB] = PATTERNS[randInt(0, 3)];
+        const useDec = (Math.random() * 100) < currentDecimalRatio;
+
+        // 後半(isTop=false): 60%小数(DD/ID)、40%整数同士(II)
+        let type;
+        if (!isTop) {
+            const backUseDec = Math.random() < 0.6;
+            type = (!backUseDec && !forceSmallDec) ? "II" : (forceSmallDec && Math.random() < 0.5 ? "ID" : "DD");
+            if (!backUseDec && forceSmallDec) type = "ID";
+        } else {
+            type = (!useDec && !forceSmallDec) ? "II" : (forceSmallDec && Math.random() < 0.5 ? "ID" : "DD");
+            if (!useDec && forceSmallDec) type = "ID";
+        }
+
+        let aStr, bStr;
+        if (type === "II") {
+            aStr = createHardInteger(dA); bStr = createHardInteger(dB);
+        } else if (type === "ID") {
+            aStr = createHardInteger(dA);
+            if (forceSmallB) {
+                bStr = "0.00" + createHardInteger(dB-2);
+                if (bStr.length > dB+2) bStr = bStr.substring(0, dB+2);
+            } else { bStr = createHardDecimal(dB, forceSmallDec); }
+        } else {
+            if (forceSmallDec) {
+                if(Math.random()<0.5) { aStr = createHardDecimal(dA, true); bStr = createHardDecimal(dB, false); }
+                else { aStr = createHardDecimal(dA, false); bStr = createHardDecimal(dB, true); }
+            } else { aStr = createHardDecimal(dA); bStr = createHardDecimal(dB); }
+        }
+
+        let currentReqBorder = (type === "II") ? false : reqBorder;
+
+        if (countPatternDigitsFromString(aStr) !== dA || countPatternDigitsFromString(bStr) !== dB) continue;
+        if (reqZero && !(hasInternalDoubleZero(aStr) || hasInternalDoubleZero(bStr))) continue;
+
+        const A = parseFloat(aStr); const B = parseFloat(bStr);
+        if (!isFinite(A) || !isFinite(B) || A === 0 || B === 0) continue;
+        const prod = A * B;
+        if (!isFinite(prod) || prod === 0) continue;
+        if (currentReqBorder && !isBorderline(prod, decimals)) continue;
+
+        let score = calculateUnshiDifficulty(A, B);
+        let th = analyzedParams.unshiThreshold;
+        if (forceSmallDec || forceSmallB) th = Math.max(1, th - 1);
+        if (tries < 1000) th = 1;
+        if (score < th) continue;
+
+        const rnd = roundTo(prod, decimals);
+        if (!isFinite(rnd) || rnd === 0) continue;
+        if (!isTop && Math.abs(rnd) < 1) continue;
+        if (type === "II" && intDigits(rnd) !== 9) continue;
+        if (getSorobanDigits(formatAnswer(rnd, decimals)) < 4) continue;
+
+        // ★マーク: 四捨五入ボーダー問題（前後半ともに対象）
+        const mark = isBorderline(prod, decimals) ? `<span class="diff-mark">★</span>` : '';
+
+        return {
+            originalText: `${aStr} × ${bStr}`,
+            display: `<span class="abacus-font">${formatOperand(aStr)}</span><span class="symbol-font">×</span><span class="abacus-font">${formatOperand(bStr)}</span>${mark}`,
+            answer: formatAnswer(rnd, decimals)
+        };
+    }
+    return generateMulProblem(isTop, forceSmallB, forceSmallDec, false, forceBorder);
+}
+
+function generateMulSet(total) {
+    const half = Math.floor(total / 2);
+    const list = new Array(total).fill(null);
+
+    // 1〜20番全体で★四捨五入ボーダーを3〜5問確定
+    const totalStarCount = randInt(3, 5);
+    const allIndices = Array.from({length: total}, (_, i) => i).sort(() => Math.random() - 0.5);
+    const starIndices = new Set(allIndices.slice(0, totalStarCount));
+
+    // 前半の枠割り当て: bothSmall×1（★と重ならないインデックスから）
+    const frontNonStar = Array.from({length: half}, (_, i) => i)
+        .filter(i => !starIndices.has(i))
+        .sort(() => Math.random() - 0.5);
+    const bothSmallIdx = frontNonStar[0] ?? 0;
+
+    const mulUsedKeys = new Set();
+
+    // パス1: 両方1未満（前半1問）
+    const ps = generateMulProblem(true, false, false, true, false, mulUsedKeys);
+    list[bothSmallIdx] = { no: bothSmallIdx + 1, ...ps };
+
+    // パス2: ★四捨五入ボーダー（3〜5問、前後半混在）
+    for (const idx of starIndices) {
+        const isTop = idx < half;
+        const p = generateMulProblem(isTop, false, false, false, true, mulUsedKeys);
+        list[idx] = { no: idx + 1, ...p };
+    }
+
+    // パス3: 残りを通常生成
+    for (let i = 0; i < total; i++) {
+        if (list[i] !== null) continue;
+        const isTop = i < half;
+        const forceSmall = ((i + 1) % 10 === 0);
+        const p = generateMulProblem(isTop, false, forceSmall, false, false, mulUsedKeys);
+        list[i] = { no: i+1, ...p };
+    }
+
+    // 元の仕様: 1問目をforceSmallB問題に（bothSmallIdxが0でない場合のみ）
+    if (bothSmallIdx !== 0 && !/^0\.00[0-9]/.test(list[0].originalText?.split('×')[1]?.trim() || '')) {
+        const sp = generateMulProblem(true, true, true);
+        if (sp) list[0] = { no: 1, ...sp };
+    }
+
+    return list;
+}
+
+/* =========================================================================
+   2. 除算
+   ========================================================================= */
+const generateNonZeroDigits = (len) => { let s=""; for(let i=0; i<len; i++) s+=String(Math.floor(Math.random()*9)+1); return s; };
+const makeNumber = (digits, isDecimal) => {
+    if (!isDecimal) return digits; 
+    if (digits.length === 1) return "0." + digits;
+    if (Math.random() < 0.3) return "0." + digits;
+    let pos = Math.floor(Math.random() * (digits.length - 1)) + 1;
+    return digits.slice(0, pos) + "." + digits.slice(pos);
+};
+
+function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, forceIntDiv = false, forceStar = false, forceSmallAnswer = false, forceSmallDividend = false, forceInexact = false, forceIntInexact = false, forceShortDividend = false, forceSmallDivisor = false, usedKeys = null) {
+    // isTop     : true = 前半(1-10問)、false = 後半(11-20問)
+    // forceIntAnswer : 答えを整数にするか（前半の一部問題）
+    // forceKampu: 還付トラップ問題
+
+    for (let retry = 0; retry < 500000; retry++) {
+        let dLen = Math.floor(Math.random() * 3) + 3; // 除数の桁数: 3〜5
+        let aLen = 8 - dLen;                          // 答えの桁数: 3〜5
+
+        // --- 還付トラップ ---
+        if (forceKampu) {
+            let dStr = generateNonZeroDigits(dLen);
+            let valD = parseFloat(dStr);
+
+            let q1 = randInt(1, 9);
+            let q2 = randInt(1, 8);
+            let qRest = "";
+            for(let j=0; j < aLen - 2; j++) qRest += String(randInt(7, 9));
+            let aBase = String(q1) + String(q2) + qRest;
+            let aStr;
+
+            if (isTop) {
+                // 前半：小数の答えあり
+                let pos = randInt(1, aBase.length - 1);
+                aStr = aBase.slice(0, pos) + "." + aBase.slice(pos);
+                if (aStr.includes('.')) {
+                    let parts = aStr.split('.');
+                    if (parts[1].length > 3) continue;
+                }
+            } else {
+                // 後半：答えは整数だが、被除数・除数に小数を含める
+                aStr = aBase; // 答えは整数
+            }
+
+            let valA = parseFloat(aStr);
+            let valN = valD * valA;
+            let nStr = parseFloat(valN.toPrecision(12)).toString();
+
+            if (nStr.includes("0") && !nStr.startsWith("0.")) continue;
+            let nDigits = getSorobanDigits(nStr);
+            if (nDigits < 3 || nDigits > 8) continue;
+
+            // 後半の還付トラップ：被除数か除数に小数を付加
+            let displayDivStr = dStr;
+            let displayNStr = nStr;
+            if (!isTop) {
+                // 除数を小数にする（例：123 → 1.23）
+                let decPos = randInt(1, dStr.length - 1);
+                let dStrDec = dStr.slice(0, decPos) + "." + dStr.slice(decPos);
+                let valDDec = parseFloat(dStrDec);
+                // 答えを整数のまま保つため被除数を再計算
+                let newN = valDDec * valA;
+                let newNStr = parseFloat(newN.toPrecision(12)).toString();
+                if (newNStr.includes("0") && !newNStr.startsWith("0.")) continue;
+                let newNDigits = getSorobanDigits(newNStr);
+                if (newNDigits < 3 || newNDigits > 10) continue;
+                // 桁数制限チェック (除数桁数 + 答え桁数 = 8)
+                let dCount = getSorobanDigits(dStrDec);
+                let aCount = getSorobanDigits(aStr);
+                if (dCount + aCount < 8 || dCount + aCount > 10) continue;
+                displayDivStr = dStrDec;
+                displayNStr = newNStr;
+            }
+
+            return {
+                dividend: displayNStr, divisor: displayDivStr, answer: addCommas(aStr),
+                display: `<span class="abacus-font">${addCommas(displayNStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(displayDivStr)}</span><span class="diff-mark">K</span>`
+            };
+        }
+
+        // --- 通常の生成ロジック ---
+        let dBase = generateNonZeroDigits(dLen);
+
+        if (isTop) {
+            // ===== 前半(1-10問) =====
+
+            // forceSmallDividend: 被除数(割られる数)を1未満にする
+            // 方針: 除数を小数(1.xxx〜9.xxx)、答えも小数(0.0xx〜0.0xx) → 被除数=除数×答え < 1
+            if (forceSmallDividend) {
+                // 除数: 整数部1桁(1〜9) + 小数部2〜4桁、ゼロなし
+                let dInt = randInt(1, 9);
+                let dFracLen = randInt(2, 4);
+                let dFrac = generateNonZeroDigits(dFracLen);
+                let dStr = dInt + "." + dFrac;
+                let valD = parseFloat(dStr); // 1.xx 〜 9.xxxx
+
+                // 答え: 0.0xx（先頭0で被除数が確実に1未満）、ゼロなし
+                let aF1 = randInt(1, 9), aF2 = randInt(1, 9);
+                let aStr = "0.0" + aF1 + aF2; // 0.011〜0.099
+                let valA = parseFloat(aStr);
+
+                // 被除数 = 除数 × 答え（最大 9.9999 × 0.099 ≒ 0.99 < 1）
+                let valN = valD * valA;
+                if (valN >= 1 || valN <= 0) continue;
+                let nStr = parseFloat(valN.toPrecision(8)).toString();
+                if (!nStr.startsWith("0.")) continue;
+                // ゼロを含む桁はNG（小数部に0が混入してもOKだが先頭0.はOK）
+                let nFrac = nStr.split(".")[1] || "";
+                if (nFrac.includes("0")) continue; // 小数部にゼロ含まず
+                let nDigits = getSorobanDigits(nStr);
+                if (nDigits < 2 || nDigits > 6) continue;
+                let dCount = getSorobanDigits(dStr);
+                let aCount = getSorobanDigits(aStr);
+                if (dCount + aCount < 5 || dCount + aCount > 10) continue;
+
+                return {
+                    dividend: nStr, divisor: dStr, answer: addCommas(aStr),
+                    display: `<span class="abacus-font">${nStr}</span><span class="symbol-font">÷</span><span class="abacus-font">${dStr}</span>`
+                };
+            }
+
+            let dStr = forceIntDiv ? dBase : makeNumber(dBase, Math.random() < 0.5);
+            let valD = parseFloat(dStr);
+            // forceStar=trueなら必ず★（非割り切れ）、forceIntDivなら必ず割り切れ、それ以外は60%割り切れ
+            let isExactMode = forceStar ? false : (forceIntDiv ? true : Math.random() < 0.6);
+
+            if (isExactMode) {
+                let aBase = generateNonZeroDigits(aLen);
+                let aStr;
+                if (forceIntDiv) {
+                    // 整数同士確定: 答えも整数に固定
+                    aStr = aBase;
+                } else if (forceSmallAnswer) {
+                    // 答えを1未満に固定（0.xxx、3桁ゼロなし小数）
+                    let f1 = randInt(1,9), f2 = randInt(1,9), f3 = randInt(1,9);
+                    aStr = "0." + f1 + f2 + f3;
+                } else if (aLen === 1 || Math.random() < 0.3) aStr = "0." + aBase;
+                else if (Math.random() < 0.5) aStr = aBase;
+                else { let pos = Math.floor(Math.random() * (aLen - 1)) + 1; aStr = aBase.slice(0, pos) + "." + aBase.slice(pos); }
+                if (aStr.includes('.')) { let frac = aStr.split('.')[1]; if (frac.length > 3) continue; }
+
+                let valA = parseFloat(aStr);
+                if (forceSmallAnswer && valA >= 1) continue;
+
+                let valN = valD * valA;
+                let nStr = parseFloat(valN.toPrecision(12)).toString();
+                // forceSmallAnswerのとき: 被除数にゼロが含まれてもOK（自然な結果）
+                if (!forceSmallAnswer && nStr.includes("0") && !nStr.startsWith("0.")) continue;
+                let nDigits = getSorobanDigits(nStr);
+                if (nDigits < 3 || nDigits > 8) continue;
+
+                return {
+                    dividend: nStr, divisor: dStr, answer: addCommas(aStr),
+                    display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span>`
+                };
+            } else {
+                // 前半の非割り切れ（★マーク・四捨五入ボーダー問題）
+                // 1より小さい割られる数も出るよう、答えから逆算して被除数を生成
+                let aBase = generateNonZeroDigits(aLen);
+                // 答えを小数に（小数第3位が4か5になるよう制御）
+                let fracDigits = randInt(1, 3);
+                let fracBase = generateNonZeroDigits(fracDigits - 1); // 下位桁
+                let borderDigit = Math.random() < 0.5 ? "4" : "5";   // 四捨五入ボーダー桁
+                let aFrac = fracBase + borderDigit;                    // 例: "34" or "5"
+                // 整数部: aLen-1桁 or 0（1未満）
+                let useSmallA = Math.random() < 0.25; // 25%で答えが1未満
+                let aStr;
+                if (useSmallA) {
+                    aStr = "0." + aFrac.padStart(3, generateNonZeroDigits(1));
+                } else {
+                    let iLen = randInt(1, Math.min(aLen - 1, 3));
+                    let iStr = String(pickDigit(false));
+                    for (let k = 1; k < iLen; k++) iStr += String(pickDigit(true));
+                    aStr = iStr + "." + aFrac;
+                }
+                if (aStr.includes('.') && aStr.split('.')[1].length > 3) continue;
+                let valA = parseFloat(aStr);
+                if (!isFinite(valA) || valA === 0) continue;
+
+                // 被除数 = 除数 × 答え（逆算）
+                let valN = valD * valA;
+                let nStr = parseFloat(valN.toPrecision(12)).toString();
+
+                // 1未満の被除数を許容（0.xxx形式はOK）
+                if (nStr.includes("0") && !nStr.startsWith("0.") && nStr !== "0") continue;
+                let nDigits = getSorobanDigits(nStr);
+                if (nDigits < 3 || nDigits > 8) continue;
+
+                // 答えの小数第3位が4か5かチェック（四捨五入ボーダー確認）
+                let ansVal = Math.round(valA * 1000) / 1000;
+                let ansStr = ansVal.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+                let checkFrac = ansVal.toFixed(3).split('.')[1] || "000";
+                if (checkFrac[2] !== "4" && checkFrac[2] !== "5") continue;
+
+                let dCount = getSorobanDigits(dStr);
+                let aCount = getSorobanDigits(ansStr);
+                if (aCount === 0) continue;
+                if (dCount + aCount < 8 || dCount + aCount > 10) continue;
+
+                return {
+                    dividend: nStr, divisor: dStr, answer: addCommas(ansStr),
+                    display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span><span class="diff-mark">★</span>`
+                };
+            }
+
+        } else {
+            // ===== 後半(11-20問) =====
+
+            // forceShortDividend: 被除数が3〜5桁、割る数＋商=8桁
+            if (forceShortDividend) {
+                // 除数は通常通り3〜5桁（整数or小数50%）
+                let dStr = makeNumber(dBase, Math.random() < 0.5);
+                let valD = parseFloat(dStr);
+                let dCount = getSorobanDigits(dStr);
+                let aLen2 = 8 - dCount;
+                if (aLen2 < 1 || aLen2 > 7) continue;
+                // 答えは整数
+                let aStr = generateNonZeroDigits(aLen2);
+                let valA = parseFloat(aStr);
+                let aCount = getSorobanDigits(aStr);
+                if (dCount + aCount !== 8) continue;
+                // 被除数 = 除数 × 答え
+                let valN = valD * valA;
+                let nStr = parseFloat(valN.toPrecision(12)).toString();
+                if (nStr.includes("0") && !nStr.startsWith("0.")) continue;
+                let nDigits = getSorobanDigits(nStr);
+                // 被除数を3〜5桁に制限
+                if (nDigits < 3 || nDigits > 5) continue;
+                const _key1 = nStr + "|" + dStr;
+                if (usedKeys && usedKeys.has(_key1)) continue;
+                if (usedKeys) usedKeys.add(_key1);
+                return {
+                    dividend: nStr, divisor: dStr, answer: addCommas(aStr),
+                    display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span>`
+                };
+            }
+
+            // forceSmallDivisor: 割る数が1未満（0.xxx）、割る数＋商=8桁
+            if (forceSmallDivisor) {
+                // 除数を0.xxx形式（1〜4桁の小数）に固定
+                let dFracLen = randInt(1, 4);
+                let dFrac = generateNonZeroDigits(dFracLen);
+                let dStr = "0." + dFrac;
+                let valD = parseFloat(dStr);
+                let dCount = getSorobanDigits(dStr); // 小数点以下の桁数
+                let aLen2 = 8 - dCount;
+                if (aLen2 < 1 || aLen2 > 7) continue;
+                // 答えは整数
+                let aStr = generateNonZeroDigits(aLen2);
+                let valA = parseFloat(aStr);
+                let aCount = getSorobanDigits(aStr);
+                if (dCount + aCount !== 8) continue;
+                // 被除数 = 除数 × 答え
+                let valN = valD * valA;
+                let nStr = parseFloat(valN.toPrecision(12)).toString();
+                if (nStr.includes("0") && !nStr.startsWith("0.")) continue;
+                let nDigits = getSorobanDigits(nStr);
+                if (nDigits < 2 || nDigits > 8) continue;
+                const _key2 = nStr + "|" + dStr;
+                if (usedKeys && usedKeys.has(_key2)) continue;
+                if (usedKeys) usedKeys.add(_key2);
+                return {
+                    dividend: nStr, divisor: dStr, answer: addCommas(aStr),
+                    display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span>`
+                };
+            }
+
+            // 通常後半: 答えは整数、被除数・除数は小数OK、割る数＋商=8桁
+            let useDivDec = Math.random() < 0.5;
+            let dStr;
+            if (useDivDec && dBase.length >= 2) {
+                let decPos = randInt(1, dBase.length - 1);
+                dStr = dBase.slice(0, decPos) + "." + dBase.slice(decPos);
+            } else {
+                dStr = dBase;
+            }
+            let valD = parseFloat(dStr);
+            let dCount = getSorobanDigits(dStr);
+            let aBase = generateNonZeroDigits(aLen);
+            let aStr = aBase;
+            let valA = parseFloat(aStr);
+            let aCount = getSorobanDigits(aStr);
+            if (dCount + aCount !== 8) continue;
+            let valN = valD * valA;
+            let nStr = parseFloat(valN.toPrecision(12)).toString();
+            if (nStr.includes("0") && !nStr.startsWith("0.")) continue;
+            let nDigits = getSorobanDigits(nStr);
+            if (nDigits < 3 || nDigits > 8) continue;
+            const _key3 = nStr + "|" + dStr;
+            if (usedKeys && usedKeys.has(_key3)) continue;
+            if (usedKeys) usedKeys.add(_key3);
+            return {
+                dividend: nStr, divisor: dStr, answer: addCommas(aStr),
+                display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span>`
+            };
+        }
+    }
+    // 生成失敗時は再帰的にリトライ
+    return generateOneDiv(isTop, forceIntAnswer, forceKampu, forceIntDiv, forceStar, forceSmallAnswer, forceSmallDividend, forceInexact, forceIntInexact, forceShortDividend, forceSmallDivisor, usedKeys);
+}
+
+function generateDivSet(total) {
+    const list = [];
+
+    // 還付トラップ3問をなるべく後半(10-19)に割り当て、前半への影響を最小化
+    const backIndices = [9,10,11,12,13,14,15,16,17,18,19].sort(() => Math.random() - 0.5);
+    const kampuIndices = new Set(backIndices.slice(0, 3));
+
+    // 前半10問の枠割り当て（0-indexed、kampu以外から順に確保）
+    // 構成: intDiv×4, star×(2or3), smallAnswer×2, smallDividend×1, 残り通常
+    const starCount = Math.random() < 0.5 ? 2 : 3;
+
+    const frontIndices = [0,1,2,3,4,5,6,7,8,9]
+        .filter(i => !kampuIndices.has(i))
+        .sort(() => Math.random() - 0.5);
+
+    let cursor = 0;
+    const intDivIndices       = new Set(frontIndices.slice(cursor, cursor += 4));
+    const starIndices          = new Set(frontIndices.slice(cursor, cursor += starCount));
+    const smallAnswerIndices   = new Set(frontIndices.slice(cursor, cursor += 2));
+    const smallDividendIndices = new Set(frontIndices.slice(cursor, cursor += 1));
+    const inexactIndices       = new Set(frontIndices.slice(cursor, cursor += 2)); // 割り切れない2問
+    const intInexactIndices    = new Set(frontIndices.slice(cursor, cursor += 1)); // 整数÷整数割り切れない1問
+
+    const firstHalfProblems = new Array(10).fill(null);
+    const divUsedKeys = new Set();
+
+    // パス1: 整数同士（4問）
+    for (const idx of intDivIndices) {
+        let p = generateOneDiv(true, false, false, true, false, false, false, false, false);
+        p.no = idx + 1;
+        firstHalfProblems[idx] = p;
+    }
+
+    // パス2: ★四捨五入ボーダー（2〜3問）
+    for (const idx of starIndices) {
+        let p = generateOneDiv(true, false, false, false, true, false, false, false, false);
+        p.no = idx + 1;
+        firstHalfProblems[idx] = p;
+    }
+
+    // パス3: 答えが1未満（2問）
+    for (const idx of smallAnswerIndices) {
+        let p = generateOneDiv(true, false, false, false, false, true, false, false, false);
+        p.no = idx + 1;
+        firstHalfProblems[idx] = p;
+    }
+
+    // パス4: 割られる数が1未満（1問）
+    for (const idx of smallDividendIndices) {
+        let p = generateOneDiv(true, false, false, false, false, false, true, false, false);
+        p.no = idx + 1;
+        firstHalfProblems[idx] = p;
+    }
+
+    // パス5: 割り切れない問題（2問）
+    for (const idx of inexactIndices) {
+        let p = generateOneDiv(true, false, false, false, false, false, false, true, false);
+        p.no = idx + 1;
+        firstHalfProblems[idx] = p;
+    }
+
+    // パス6: 整数÷整数で割り切れない（1問）
+    for (const idx of intInexactIndices) {
+        let p = generateOneDiv(true, false, false, false, false, false, false, false, true);
+        p.no = idx + 1;
+        firstHalfProblems[idx] = p;
+    }
+
+    // パス7: 残り（還付トラップ含む通常）
+    for (let idx = 0; idx < 10; idx++) {
+        if (firstHalfProblems[idx] !== null) continue;
+        let isKampu = kampuIndices.has(idx);
+        let p = generateOneDiv(true, false, isKampu, false, false, false, false, false, false, false, false, divUsedKeys);
+        p.no = idx + 1;
+        firstHalfProblems[idx] = p;
+    }
+
+    // 後半の枠割り当て
+    const backNonKampu = Array.from({length: total - 10}, (_, i) => i + 10)
+        .filter(i => !kampuIndices.has(i))
+        .sort(() => Math.random() - 0.5);
+    let bCursor = 0;
+    const backInexactIndices     = new Set(backNonKampu.slice(bCursor, bCursor += 2)); // 割り切れない2問
+    const backIntInexactIndices  = new Set(backNonKampu.slice(bCursor, bCursor += 1)); // 整数÷整数割り切れない1問
+    const backShortDivIndices    = new Set(backNonKampu.slice(bCursor, bCursor += 2)); // 被除数3〜5桁2問
+    const backSmallDivisorIndices= new Set(backNonKampu.slice(bCursor, bCursor += 2)); // 割る数1未満2問
+
+    // 後半(10-19)を生成
+    const secondHalfProblems = [];
+    for (let i = 10; i < total; i++) {
+        let isKampu = kampuIndices.has(i);
+        let p;
+        if (backIntInexactIndices.has(i)) {
+            p = generateOneDiv(false, false, false, false, false, false, false, false, true, false, false, divUsedKeys);
+        } else if (backInexactIndices.has(i)) {
+            p = generateOneDiv(false, false, false, false, false, false, false, true, false, false, false, divUsedKeys);
+        } else if (backShortDivIndices.has(i)) {
+            p = generateOneDiv(false, false, false, false, false, false, false, false, false, true, false, divUsedKeys);
+        } else if (backSmallDivisorIndices.has(i)) {
+            p = generateOneDiv(false, false, false, false, false, false, false, false, false, false, true, divUsedKeys);
+        } else {
+            p = generateOneDiv(false, false, isKampu, false, false, false, false, false, false, false, false, divUsedKeys);
+        }
+        p.no = i + 1;
+        secondHalfProblems.push(p);
+    }
+
+    return [...firstHalfProblems, ...secondHalfProblems];
+}
+
+/* =========================================================================
+   3. みとり算  ★修正: 全問でランダムにconfigを選択
+   ========================================================================= */
+function calculateFingeringCount(state, delta) {
+    if (delta === 0) return 0;
+    const next = state + delta;
+    if (delta > 0) {
+        if (next >= 10) {
+            const partner = 10 - delta;
+            if (state >= 5 && state - partner >= 5) return 2;
+            if (state >= 5 && state - partner < 5) return 3;
+            if (state < 5 && state + partner === 5) return 2;
+            return 3;
+        }
+        if (state < 5 && next >= 5 && delta < 5) return 2;
+        return 1;
+    } else {
+        const absD = Math.abs(delta);
+        if (next < 0) {
+            if (absD <= 4) return state >= 5 ? 2 : 2;
+            if (absD === 5) return 2;
+            return (state >= 5 && absD < 9) ? 3 : 2;
+        }
+        return (state >= 5 && next < 5) ? 2 : 1;
+    }
+}
+function calculateTotalFingering(terms) {
+    let total = 0;
+    for (let k = 1; k <= 7; k++) {
+        let localSum = 0;
+        let firstD = Math.floor(Math.abs(terms[0]) / Math.pow(10, k-1)) % 10;
+        if (firstD > 0) { total += 1; localSum = firstD; }
+        for (let j = 1; j < terms.length; j++) {
+            let d = Math.floor(Math.abs(terms[j]) / Math.pow(10, k-1)) % 10;
+            if (d !== 0) {
+                total += calculateFingeringCount(localSum % 10, terms[j] > 0 ? d : -d);
+                localSum += (terms[j] > 0 ? d : -d);
+            }
+        }
+    }
+    return total;
+}
+function createSingleMitori(digitCounts, isSubtractionProblem) {
+    let digits = [];
+    for (const k in digitCounts) for (let i = 0; i < digitCounts[k]; i++) digits.push(parseInt(k));
+    digits.sort(() => Math.random() - 0.5);
+    let terms = digits.map(d => Math.floor(Math.random() * (Math.pow(10, d) - Math.pow(10, d-1))) + Math.pow(10, d-1));
+    
+    if (isSubtractionProblem) {
+        const subCount = Math.random() < 0.5 ? 2 : 3;
+        let idxs = [1,2,3,4,5,6,7].sort(() => Math.random() - 0.5);
+        for(let j=0; j<subCount; j++) terms[idxs[j]] *= -1;
+    }
+    return { terms, answer: terms.reduce((a, b) => a + b, 0), totalFingering: calculateTotalFingering(terms) };
+}
+
+function generateMitoriSet(total) {
+    const list = [];
+    const usedKeys = new Set();
+    const minSub = total < 20 ? 2 : 3;
+    for (let i = 0; i < total; i++) {
+        const config = Math.random() < 0.5 ? {4:2, 5:2, 6:2, 7:2} : {5:4, 6:4};
+        const isSub = (i < minSub) || (Math.random() < 0.4);
+        let p, key;
+        let tries = 1000;
+        do {
+            p = createSingleMitori(config, isSub);
+            key = JSON.stringify(p.terms);
+            tries--;
+        } while (usedKeys.has(key) && tries > 0);
+        usedKeys.add(key);
+        list.push({ no: i+1, terms: p.terms, answer: addCommas(p.answer), fingering: p.totalFingering });
+    }
+    return list;
+}
+
+/* =========================================================================
+   4. 暗算
+   ========================================================================= */
+function generateAnzanSet(total) {
+    const list = [];
+    
+    const anzUsedKeys = new Set();
+    let isSubArray = Array(total).fill(false);
+    for(let i = 0; i < 8; i++) isSubArray[i] = true;
+    isSubArray.sort(() => Math.random() - 0.5);
+
+    let numIntermediateNeg = Math.floor(Math.random() * 2) + 1;
+    let subIndices = [];
+    for (let i = 0; i < total; i++) {
+        if (isSubArray[i]) subIndices.push(i);
+    }
+    subIndices.sort(() => Math.random() - 0.5);
+    let intermediateNegIndices = new Set(subIndices.slice(0, numIntermediateNeg));
+
+    for(let i=0; i<total; i++) {
+        let isSub = isSubArray[i];
+        let reqInterNeg = intermediateNegIndices.has(i);
+        let valid = false;
+        let terms = [], totalVal = 0;
+
+        while(!valid) {
+            let p3 = [randInt(100, 999), randInt(100, 999), randInt(100, 999), randInt(100, 999)];
+            let p2 = [randInt(10, 99), randInt(10, 99)];
+            
+            let posPool = [];
+            let negPool = [];
+
+            if (isSub) {
+                let neg1 = p3.pop(); 
+                let neg2 = (Math.random() < 0.5) ? p3.pop() : p2.pop(); 
+                negPool = [-neg1, -neg2];
+                posPool = [...p3, ...p2];
+            } else {
+                posPool = [...p3, ...p2];
+                negPool = [];
+            }
+
+            let allTerms = [...posPool, ...negPool];
+            let finalSum = allTerms.reduce((a, b) => a + b, 0);
+
+            if (finalSum <= 0) continue;
+
+            let attempts = 0;
+            let found = false;
+
+            while(attempts < 200) {
+                let currentTry = [...allTerms].sort(() => Math.random() - 0.5);
+                
+                if (currentTry[0] < 0) { attempts++; continue; }
+
+                let currentTotal = 0;
+                let dippedBelowZero = false;
+
+                for(let k=0; k<6; k++) {
+                    currentTotal += currentTry[k];
+                    if (currentTotal < 0) dippedBelowZero = true;
+                }
+                
+                if (reqInterNeg) {
+                    if (dippedBelowZero) { terms = currentTry; totalVal = finalSum; found = true; break; }
+                } else {
+                    if (!dippedBelowZero) { terms = currentTry; totalVal = finalSum; found = true; break; }
+                }
+                attempts++;
+            }
+            
+            if (found) valid = true;
+        }
+        
+        const _anzKey = JSON.stringify(terms);
+        if (anzUsedKeys.has(_anzKey)) continue; // 重複なら再試行
+        anzUsedKeys.add(_anzKey);
+        list.push({ no: i+1, terms: terms, answer: addCommas(totalVal) });
+    }
+    return list;
+}
+
+/* =========================================================================
+   5. 描画・UI制御
+   ========================================================================= */
+function renderSheets() {
+    const colKL = document.getElementById('kake-left');
+    const colKR = document.getElementById('kake-right');
+    colKL.innerHTML = '<div class="column-label">小数第三位未満四捨五入</div>'; 
+    colKR.innerHTML = '<div class="column-label">整数位未満四捨五入</div>';
+    
+    const colWL = document.getElementById('wari-left');
+    const colWR = document.getElementById('wari-right');
+    colWL.innerHTML = '<div class="column-label">小数第三位未満四捨五入</div>';
+    colWR.innerHTML = '<div class="column-label">整数位未満四捨五入</div>';
+    
+    for(let i=0; i<20; i++) {
+        let pk = globalData.mul[i];
+        let pw = globalData.div[i];
+        
+        let htmlK = `<div class="problem-row-kw"><div class="prob-idx">${pk.no}</div><div class="prob-text">${pk.display}<span class="symbol-font">=</span></div><div class="ans-space"></div></div>`;
+        let htmlW = `<div class="problem-row-kw"><div class="prob-idx">${pw.no}</div><div class="prob-text">${pw.display}<span class="symbol-font">=</span></div><div class="ans-space"></div></div>`;
+        
+        if (i < 10) {
+            colKL.innerHTML += htmlK;
+            colWL.innerHTML += htmlW;
+        } else {
+            colKR.innerHTML += htmlK;
+            colWR.innerHTML += htmlW;
+        }
+    }
+
+    const areaM = document.getElementById('mitori-area');
+    areaM.innerHTML = '';
+    globalData.mit.forEach(p => {
+        let rowsHtml = p.terms.map(n => `<div class="m-row">${(n<0?'-':'') + addCommas(Math.abs(n))}</div>`).join('');
+        areaM.innerHTML += `<div class="mitori-box">
+            <div class="mitori-idx"><span>${p.no}</span> <span class="fingering-count">[指:${p.fingering}]</span></div>
+            <div class="mitori-body">${rowsHtml}</div><div class="m-ans-area"></div></div>`;
+    });
+
+    const areaA = document.getElementById('anzan-area');
+    areaA.innerHTML = '';
+    globalData.anz.forEach(p => {
+        if (!p || !p.terms) return;
+        let rowsHtml = p.terms.map(n => `<div class="m-row">${(n<0?'-':'') + Math.abs(n)}</div>`).join('');
+        areaA.innerHTML += `<div class="mitori-box"><div class="mitori-idx">${p.no}</div><div class="mitori-body">${rowsHtml}</div><div class="m-ans-area"></div></div>`;
+    });
+}
+
+function renderAnswerTable() {
+    const tbody = document.getElementById('answer-tbody');
+    tbody.innerHTML = '';
+    
+    let errK = JSON.parse(localStorage.getItem("sorobanMistakes_Mul") || "[]");
+    let errW = JSON.parse(localStorage.getItem("sorobanMistakes_Div") || "[]");
+    let errM = JSON.parse(localStorage.getItem("sorobanMistakes_Mit") || "[]");
+    let errA = JSON.parse(localStorage.getItem("sorobanMistakes_Anz") || "[]");
+
+    for(let i=0; i<20; i++) {
+        let k = globalData.mul[i], w = globalData.div[i], m = globalData.mit[i], a = globalData.anz[i];
+        
+        let cK = k && errK.some(x => x.originalText === k.originalText) ? "saved" : "";
+        let cW = w && errW.some(x => x.dividend === w.dividend && x.divisor === w.divisor) ? "saved" : "";
+        let cM = m && errM.some(x => JSON.stringify(x.terms) === JSON.stringify(m.terms)) ? "saved" : "";
+        let cA = a && errA.some(x => JSON.stringify(x.terms) === JSON.stringify(a.terms)) ? "saved" : "";
+
+        tbody.innerHTML += `
+            <tr style="${i%2!==0 ? 'background:#fafafa;':''}">
+                <td class="col-idx">${i+1}</td>
+                <td><span class="ans-val">${k?k.answer:''}</span> <button class="btn-wrong ${cK}" onclick="toggleErr('Mul', ${i}, this)">弱点</button></td>
+                <td><span class="ans-val">${w?w.answer:''}</span> <button class="btn-wrong ${cW}" onclick="toggleErr('Div', ${i}, this)">弱点</button></td>
+                <td><span class="ans-val">${m?m.answer:''}</span> <button class="btn-wrong ${cM}" onclick="toggleErr('Mit', ${i}, this)">弱点</button></td>
+                <td><span class="ans-val">${a?a.answer:''}</span> <button class="btn-wrong ${cA}" onclick="toggleErr('Anz', ${i}, this)">弱点</button></td>
+            </tr>
+        `;
+    }
+    updateCounts();
+}
+
+/* =========================================================================
+   6. 弱点データ管理・メイン制御
+   ========================================================================= */
+function toggleErr(type, index, btn) {
+    if(btn.classList.contains('saved')) return; 
+    let key = "sorobanMistakes_" + type;
+    let list = JSON.parse(localStorage.getItem(key) || "[]");
+    
+    if(type === 'Mul') list.push(globalData.mul[index]);
+    if(type === 'Div') list.push(globalData.div[index]);
+    if(type === 'Mit') list.push(globalData.mit[index]);
+    if(type === 'Anz') list.push(globalData.anz[index]);
+    
+    localStorage.setItem(key, JSON.stringify(list));
+    btn.classList.add('saved');
+    updateCounts();
+}
+
+function updateCounts() {
+    document.getElementById('countMul').innerText = JSON.parse(localStorage.getItem("sorobanMistakes_Mul") || "[]").length;
+    document.getElementById('countDiv').innerText = JSON.parse(localStorage.getItem("sorobanMistakes_Div") || "[]").length;
+    document.getElementById('countMit').innerText = JSON.parse(localStorage.getItem("sorobanMistakes_Mit") || "[]").length;
+    document.getElementById('countAnz').innerText = JSON.parse(localStorage.getItem("sorobanMistakes_Anz") || "[]").length;
+}
+
+function clearAllMistakes() {
+    if(confirm("すべての弱点データをリセットしますか？")) {
+        localStorage.removeItem("sorobanMistakes_Mul");
+        localStorage.removeItem("sorobanMistakes_Div");
+        localStorage.removeItem("sorobanMistakes_Mit");
+        localStorage.removeItem("sorobanMistakes_Anz");
+        updateCounts();
+        if(document.getElementById('view-answer').classList.contains('active')) renderAnswerTable();
+        alert("リセットしました。");
+    }
+}
+
+function generateAll() {
+    globalData.mul = generateMulSet(20);
+    globalData.div = generateDivSet(20);
+    globalData.mit = generateMitoriSet(20);
+    globalData.anz = generateAnzanSet(20);
+    renderSheets();
+    if(document.getElementById('view-answer').classList.contains('active')) renderAnswerTable();
+}
+
+function generateFromMistakes() {
+    let eK = JSON.parse(localStorage.getItem("sorobanMistakes_Mul") || "[]");
+    let eW = JSON.parse(localStorage.getItem("sorobanMistakes_Div") || "[]");
+    let eM = JSON.parse(localStorage.getItem("sorobanMistakes_Mit") || "[]");
+    let eA = JSON.parse(localStorage.getItem("sorobanMistakes_Anz") || "[]");
+
+    if(!eK.length && !eW.length && !eM.length && !eA.length) {
+        return alert("弱点データが登録されていません。");
+    }
+
+    const fill = (arr, total, genFunc) => {
+        let res = [...arr].sort(()=>Math.random()-0.5).slice(0, total);
+        if(res.length < total) res = res.concat(genFunc(total - res.length));
+        return res.map((p, i) => ({...p, no: i+1}));
+    };
+
+    globalData.mul = fill(eK, 20, generateMulSet);
+    globalData.div = fill(eW, 20, generateDivSet);
+    globalData.mit = fill(eM, 20, generateMitoriSet);
+    globalData.anz = fill(eA, 20, generateAnzanSet);
+
+    renderSheets();
+    switchView('problem');
+    alert("弱点データから問題を作成しました（足りない分は新規生成で補填されています）。");
+}
+
+function switchView(view) {
+    if(view === 'answer') {
+        document.getElementById('view-problem').classList.remove('active');
+        document.getElementById('view-answer').classList.add('active');
+        document.getElementById('control-problem').style.display = 'none';
+        document.getElementById('control-answer').style.display = 'block';
+        renderAnswerTable();
+    } else {
+        document.getElementById('view-answer').classList.remove('active');
+        document.getElementById('view-problem').classList.add('active');
+        document.getElementById('control-answer').style.display = 'none';
+        document.getElementById('control-problem').style.display = 'block';
+    }
+}
+
+window.onload = () => {
+    generateAll();
+    updateCounts();
+};
+</script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+
+</body></html>
