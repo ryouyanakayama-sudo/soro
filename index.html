@@ -1,7 +1,7 @@
-<!DOCTYPE html>
-<!-- saved from url=(0044)http://127.0.0.1:5500/soro-tu-ru/index2.html -->
-<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
     <title>そろばん総合競技ツール（レイアウト完全版）</title>
     <style>
         @font-face {
@@ -164,7 +164,7 @@
             <h3>設定メニュー</h3>
             <button id="generateBtn" class="btn btn-primary" onclick="generateAll()">🔄 全種目 新規作成</button>
             <button onclick="window.print()" class="btn btn-print">🖨️ 問題を印刷</button>
-            <button id="toAnswerBtn" class="btn btn-answer" onclick="switchView(&#39;answer&#39;)">📝 解答・弱点登録へ</button>
+            <button id="toAnswerBtn" class="btn btn-answer" onclick="switchView('answer')">📝 解答・弱点登録へ</button>
             
             <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
             
@@ -173,13 +173,13 @@
             <div style="font-size:12px; margin-top:8px;">
                 登録数 (か/わ/み/暗):<br>
                 <b id="countMul">0</b> / <b id="countDiv">0</b> / <b id="countMit">0</b> / <b id="countAnz">0</b>
-                <a href="http://127.0.0.1:5500/soro-tu-ru/index2.html#" onclick="clearAllMistakes()" style="color:#d00; margin-left:10px; float:right;">[リセット]</a>
+                <a href="#" onclick="clearAllMistakes()" style="color:#d00; margin-left:10px; float:right;">[リセット]</a>
             </div>
         </div>
 
         <div id="control-answer" style="display:none;">
             <h3>解答メニュー</h3>
-            <button class="btn btn-print" style="background:#666;" onclick="switchView(&#39;problem&#39;)">🔙 問題に戻る</button>
+            <button class="btn btn-print" style="background:#666;" onclick="switchView('problem')">🔙 問題に戻る</button>
             <button onclick="window.print()" class="btn btn-print">🖨️ 解答表を印刷</button>
         </div>
     </div>
@@ -191,8 +191,8 @@
                 <div class="sheet-header">打倒MAX～東京珠算選手権～</div>
                 <div class="sub-header">乗算 (制限時間 5分)</div>
                 <div class="calc-wrapper">
-                    <div class="calc-col" id="kake-left"><div class="column-label">小数第三位未満四捨五入</div><div class="problem-row-kw"><div class="prob-idx">1</div><div class="prob-text"><span class="abacus-font">0.083773</span><span class="symbol-font">×</span><span class="abacus-font">0.858</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">2</div><div class="prob-text"><span class="abacus-font">712</span><span class="symbol-font">×</span><span class="abacus-font">333,151</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">3</div><div class="prob-text"><span class="abacus-font">936</span><span class="symbol-font">×</span><span class="abacus-font">219,207</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">4</div><div class="prob-text"><span class="abacus-font">64.6</span><span class="symbol-font">×</span><span class="abacus-font">8,736.39</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">5</div><div class="prob-text"><span class="abacus-font">7,835.6</span><span class="symbol-font">×</span><span class="abacus-font">3.915</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">6</div><div class="prob-text"><span class="abacus-font">847.003</span><span class="symbol-font">×</span><span class="abacus-font">0.668</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">7</div><div class="prob-text"><span class="abacus-font">827</span><span class="symbol-font">×</span><span class="abacus-font">516,334</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">8</div><div class="prob-text"><span class="abacus-font">87,149</span><span class="symbol-font">×</span><span class="abacus-font">5,729</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">9</div><div class="prob-text"><span class="abacus-font">4,765</span><span class="symbol-font">×</span><span class="abacus-font">54,578</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">10</div><div class="prob-text"><span class="abacus-font">691</span><span class="symbol-font">×</span><span class="abacus-font">0.182529</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div></div>
-                    <div class="calc-col" id="kake-right"><div class="column-label">整数位未満四捨五入</div><div class="problem-row-kw"><div class="prob-idx">11</div><div class="prob-text"><span class="abacus-font">82.13</span><span class="symbol-font">×</span><span class="abacus-font">38.601</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">12</div><div class="prob-text"><span class="abacus-font">7.57</span><span class="symbol-font">×</span><span class="abacus-font">90,034.4</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">13</div><div class="prob-text"><span class="abacus-font">832</span><span class="symbol-font">×</span><span class="abacus-font">982,005</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">14</div><div class="prob-text"><span class="abacus-font">325,764</span><span class="symbol-font">×</span><span class="abacus-font">439</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">15</div><div class="prob-text"><span class="abacus-font">90,098</span><span class="symbol-font">×</span><span class="abacus-font">8,338</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">16</div><div class="prob-text"><span class="abacus-font">4,037.3</span><span class="symbol-font">×</span><span class="abacus-font">9.455</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">17</div><div class="prob-text"><span class="abacus-font">3,402</span><span class="symbol-font">×</span><span class="abacus-font">62,522</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">18</div><div class="prob-text"><span class="abacus-font">885,799</span><span class="symbol-font">×</span><span class="abacus-font">481</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">19</div><div class="prob-text"><span class="abacus-font">46,525</span><span class="symbol-font">×</span><span class="abacus-font">4,025</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">20</div><div class="prob-text"><span class="abacus-font">391</span><span class="symbol-font">×</span><span class="abacus-font">452,678</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div></div>
+                    <div class="calc-col" id="kake-left"></div>
+                    <div class="calc-col" id="kake-right"></div>
                 </div>
             </div>
 
@@ -200,66 +200,26 @@
                 <div class="sheet-header">打倒MAX～東京珠算選手権～</div>
                 <div class="sub-header">除算 (制限時間 5分)</div>
                 <div class="calc-wrapper">
-                    <div class="calc-col" id="wari-left"><div class="column-label">小数第三位未満四捨五入</div><div class="problem-row-kw"><div class="prob-idx">1</div><div class="prob-text"><span class="abacus-font">64,923,246</span><span class="symbol-font">÷</span><span class="abacus-font">678</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">2</div><div class="prob-text"><span class="abacus-font">6,569,478</span><span class="symbol-font">÷</span><span class="abacus-font">57,627</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">3</div><div class="prob-text"><span class="abacus-font">0.1897785</span><span class="symbol-font">÷</span><span class="abacus-font">0.3495</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">4</div><div class="prob-text"><span class="abacus-font">41.229915</span><span class="symbol-font">÷</span><span class="abacus-font">64.929</span><span class="diff-mark">★</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">5</div><div class="prob-text"><span class="abacus-font">0.0978499</span><span class="symbol-font">÷</span><span class="abacus-font">0.24835</span><span class="diff-mark">★</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">6</div><div class="prob-text"><span class="abacus-font">0.06558872</span><span class="symbol-font">÷</span><span class="abacus-font">0.28271</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">7</div><div class="prob-text"><span class="abacus-font">0.78795</span><span class="symbol-font">÷</span><span class="abacus-font">9.27</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">8</div><div class="prob-text"><span class="abacus-font">11,461,692</span><span class="symbol-font">÷</span><span class="abacus-font">186</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">9</div><div class="prob-text"><span class="abacus-font">41,579,538</span><span class="symbol-font">÷</span><span class="abacus-font">759</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">10</div><div class="prob-text"><span class="abacus-font">1,337,836.5</span><span class="symbol-font">÷</span><span class="abacus-font">23,595</span><span class="diff-mark">K</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div></div>
-                    <div class="calc-col" id="wari-right"><div class="column-label">整数位未満四捨五入</div><div class="problem-row-kw"><div class="prob-idx">11</div><div class="prob-text"><span class="abacus-font">26,757</span><span class="symbol-font">÷</span><span class="abacus-font">3.375</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">12</div><div class="prob-text"><span class="abacus-font">14,265.668</span><span class="symbol-font">÷</span><span class="abacus-font">0.428</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">13</div><div class="prob-text"><span class="abacus-font">24,491,374</span><span class="symbol-font">÷</span><span class="abacus-font">45,523</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">14</div><div class="prob-text"><span class="abacus-font">865,113.6</span><span class="symbol-font">÷</span><span class="abacus-font">1,386.4</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">15</div><div class="prob-text"><span class="abacus-font">269,987.16</span><span class="symbol-font">÷</span><span class="abacus-font">8.44</span><span class="diff-mark">K</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">16</div><div class="prob-text"><span class="abacus-font">398,475.87</span><span class="symbol-font">÷</span><span class="abacus-font">0.47</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">17</div><div class="prob-text"><span class="abacus-font">861.9</span><span class="symbol-font">÷</span><span class="abacus-font">2.7625</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">18</div><div class="prob-text"><span class="abacus-font">98,421.84</span><span class="symbol-font">÷</span><span class="abacus-font">3.74</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">19</div><div class="prob-text"><span class="abacus-font">6,993,982.8</span><span class="symbol-font">÷</span><span class="abacus-font">766.8</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div><div class="problem-row-kw"><div class="prob-idx">20</div><div class="prob-text"><span class="abacus-font">46,489.58</span><span class="symbol-font">÷</span><span class="abacus-font">3.61</span><span class="diff-mark">K</span><span class="symbol-font">=</span></div><div class="ans-space"></div></div></div>
+                    <div class="calc-col" id="wari-left"></div>
+                    <div class="calc-col" id="wari-right"></div>
                 </div>
             </div>
 
             <div class="sheet">
                 <div class="sheet-header">打倒MAX～東京珠算選手権～</div>
                 <div class="sub-header">みとり算 (制限時間 5分)</div>
-                <div class="mitori-wrapper mitori-normal" id="mitori-area"><div class="mitori-box">
-            <div class="mitori-idx"><span>1</span> <span class="fingering-count">[指:71]</span></div>
-            <div class="mitori-body"><div class="m-row">62,275</div><div class="m-row">41,509</div><div class="m-row">267,591</div><div class="m-row">-857,893</div><div class="m-row">-209,899</div><div class="m-row">236,564</div><div class="m-row">37,428</div><div class="m-row">56,102</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>2</span> <span class="fingering-count">[指:61]</span></div>
-            <div class="mitori-body"><div class="m-row">81,061</div><div class="m-row">572,948</div><div class="m-row">-43,001</div><div class="m-row">78,692</div><div class="m-row">294,070</div><div class="m-row">865,123</div><div class="m-row">40,142</div><div class="m-row">-133,057</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>3</span> <span class="fingering-count">[指:64]</span></div>
-            <div class="mitori-body"><div class="m-row">744,735</div><div class="m-row">-38,083</div><div class="m-row">80,739</div><div class="m-row">93,641</div><div class="m-row">-10,842</div><div class="m-row">416,776</div><div class="m-row">973,282</div><div class="m-row">581,640</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>4</span> <span class="fingering-count">[指:67]</span></div>
-            <div class="mitori-body"><div class="m-row">2,676</div><div class="m-row">-6,375</div><div class="m-row">-77,738</div><div class="m-row">980,540</div><div class="m-row">18,455</div><div class="m-row">525,877</div><div class="m-row">-3,250,992</div><div class="m-row">5,859,038</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>5</span> <span class="fingering-count">[指:68]</span></div>
-            <div class="mitori-body"><div class="m-row">80,701</div><div class="m-row">36,407</div><div class="m-row">475,999</div><div class="m-row">54,027</div><div class="m-row">400,520</div><div class="m-row">65,091</div><div class="m-row">905,217</div><div class="m-row">616,835</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>6</span> <span class="fingering-count">[指:76]</span></div>
-            <div class="mitori-body"><div class="m-row">957,112</div><div class="m-row">47,153</div><div class="m-row">770,898</div><div class="m-row">-378,392</div><div class="m-row">67,779</div><div class="m-row">-23,463</div><div class="m-row">500,249</div><div class="m-row">-77,196</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>7</span> <span class="fingering-count">[指:65]</span></div>
-            <div class="mitori-body"><div class="m-row">64,260</div><div class="m-row">-12,053</div><div class="m-row">682,527</div><div class="m-row">58,762</div><div class="m-row">-758,085</div><div class="m-row">76,636</div><div class="m-row">500,252</div><div class="m-row">787,181</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>8</span> <span class="fingering-count">[指:77]</span></div>
-            <div class="mitori-body"><div class="m-row">110,365</div><div class="m-row">62,267</div><div class="m-row">681,663</div><div class="m-row">880,941</div><div class="m-row">59,944</div><div class="m-row">92,369</div><div class="m-row">21,713</div><div class="m-row">924,440</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>9</span> <span class="fingering-count">[指:76]</span></div>
-            <div class="mitori-body"><div class="m-row">32,123</div><div class="m-row">62,984</div><div class="m-row">555,961</div><div class="m-row">838,354</div><div class="m-row">71,584</div><div class="m-row">402,457</div><div class="m-row">86,695</div><div class="m-row">660,107</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>10</span> <span class="fingering-count">[指:76]</span></div>
-            <div class="mitori-body"><div class="m-row">987,974</div><div class="m-row">66,633</div><div class="m-row">-70,177</div><div class="m-row">70,689</div><div class="m-row">917,077</div><div class="m-row">931,739</div><div class="m-row">-123,130</div><div class="m-row">34,568</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>11</span> <span class="fingering-count">[指:73]</span></div>
-            <div class="mitori-body"><div class="m-row">93,335</div><div class="m-row">6,502,928</div><div class="m-row">390,210</div><div class="m-row">639,559</div><div class="m-row">7,211,698</div><div class="m-row">33,105</div><div class="m-row">9,404</div><div class="m-row">5,433</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>12</span> <span class="fingering-count">[指:72]</span></div>
-            <div class="mitori-body"><div class="m-row">2,496,981</div><div class="m-row">3,294,736</div><div class="m-row">813,620</div><div class="m-row">1,057</div><div class="m-row">320,983</div><div class="m-row">91,206</div><div class="m-row">5,557</div><div class="m-row">40,207</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>13</span> <span class="fingering-count">[指:85]</span></div>
-            <div class="mitori-body"><div class="m-row">12,796</div><div class="m-row">298,487</div><div class="m-row">-60,294</div><div class="m-row">728,634</div><div class="m-row">-37,342</div><div class="m-row">44,259</div><div class="m-row">764,135</div><div class="m-row">776,860</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>14</span> <span class="fingering-count">[指:74]</span></div>
-            <div class="mitori-body"><div class="m-row">781,794</div><div class="m-row">70,298</div><div class="m-row">410,378</div><div class="m-row">112,116</div><div class="m-row">79,997</div><div class="m-row">292,177</div><div class="m-row">28,474</div><div class="m-row">12,506</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>15</span> <span class="fingering-count">[指:71]</span></div>
-            <div class="mitori-body"><div class="m-row">93,081</div><div class="m-row">72,553</div><div class="m-row">-731,424</div><div class="m-row">379,936</div><div class="m-row">-491,599</div><div class="m-row">-735,925</div><div class="m-row">76,510</div><div class="m-row">32,229</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>16</span> <span class="fingering-count">[指:61]</span></div>
-            <div class="mitori-body"><div class="m-row">45,965</div><div class="m-row">31,911</div><div class="m-row">-444,503</div><div class="m-row">-189,701</div><div class="m-row">-20,011</div><div class="m-row">75,031</div><div class="m-row">444,805</div><div class="m-row">568,867</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>17</span> <span class="fingering-count">[指:70]</span></div>
-            <div class="mitori-body"><div class="m-row">9,177,743</div><div class="m-row">4,070</div><div class="m-row">30,460</div><div class="m-row">2,956</div><div class="m-row">3,295,287</div><div class="m-row">57,231</div><div class="m-row">151,497</div><div class="m-row">273,474</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>18</span> <span class="fingering-count">[指:70]</span></div>
-            <div class="mitori-body"><div class="m-row">5,699</div><div class="m-row">4,001,633</div><div class="m-row">64,116</div><div class="m-row">146,563</div><div class="m-row">674,540</div><div class="m-row">6,501,521</div><div class="m-row">5,326</div><div class="m-row">13,475</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>19</span> <span class="fingering-count">[指:75]</span></div>
-            <div class="mitori-body"><div class="m-row">67,397</div><div class="m-row">-33,491</div><div class="m-row">-460,306</div><div class="m-row">882,437</div><div class="m-row">67,658</div><div class="m-row">26,666</div><div class="m-row">869,862</div><div class="m-row">-468,894</div></div><div class="m-ans-area"></div></div><div class="mitori-box">
-            <div class="mitori-idx"><span>20</span> <span class="fingering-count">[指:70]</span></div>
-            <div class="mitori-body"><div class="m-row">18,617</div><div class="m-row">84,520</div><div class="m-row">850,312</div><div class="m-row">962,317</div><div class="m-row">73,039</div><div class="m-row">435,703</div><div class="m-row">176,679</div><div class="m-row">15,324</div></div><div class="m-ans-area"></div></div></div>
+                <div class="mitori-wrapper mitori-normal" id="mitori-area"></div>
             </div>
 
             <div class="sheet">
                 <div class="sheet-header">打倒MAX～東京珠算選手権～</div>
                 <div class="sub-header">暗算 (制限時間 1分30秒)</div>
-                <div class="mitori-wrapper mitori-anzan" id="anzan-area"><div class="mitori-box"><div class="mitori-idx">1</div><div class="mitori-body"><div class="m-row">68</div><div class="m-row">86</div><div class="m-row">897</div><div class="m-row">364</div><div class="m-row">557</div><div class="m-row">467</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">2</div><div class="mitori-body"><div class="m-row">148</div><div class="m-row">326</div><div class="m-row">641</div><div class="m-row">662</div><div class="m-row">95</div><div class="m-row">11</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">3</div><div class="mitori-body"><div class="m-row">912</div><div class="m-row">636</div><div class="m-row">232</div><div class="m-row">594</div><div class="m-row">24</div><div class="m-row">49</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">4</div><div class="mitori-body"><div class="m-row">957</div><div class="m-row">265</div><div class="m-row">33</div><div class="m-row">-430</div><div class="m-row">-627</div><div class="m-row">28</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">5</div><div class="mitori-body"><div class="m-row">93</div><div class="m-row">771</div><div class="m-row">740</div><div class="m-row">54</div><div class="m-row">180</div><div class="m-row">637</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">6</div><div class="mitori-body"><div class="m-row">56</div><div class="m-row">934</div><div class="m-row">111</div><div class="m-row">-311</div><div class="m-row">22</div><div class="m-row">-503</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">7</div><div class="mitori-body"><div class="m-row">62</div><div class="m-row">-39</div><div class="m-row">563</div><div class="m-row">131</div><div class="m-row">505</div><div class="m-row">-556</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">8</div><div class="mitori-body"><div class="m-row">928</div><div class="m-row">92</div><div class="m-row">-189</div><div class="m-row">-308</div><div class="m-row">283</div><div class="m-row">26</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">9</div><div class="mitori-body"><div class="m-row">841</div><div class="m-row">81</div><div class="m-row">744</div><div class="m-row">990</div><div class="m-row">861</div><div class="m-row">22</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">10</div><div class="mitori-body"><div class="m-row">66</div><div class="m-row">-934</div><div class="m-row">536</div><div class="m-row">432</div><div class="m-row">911</div><div class="m-row">-13</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">11</div><div class="mitori-body"><div class="m-row">253</div><div class="m-row">181</div><div class="m-row">903</div><div class="m-row">81</div><div class="m-row">350</div><div class="m-row">52</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">12</div><div class="mitori-body"><div class="m-row">875</div><div class="m-row">992</div><div class="m-row">73</div><div class="m-row">902</div><div class="m-row">46</div><div class="m-row">822</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">13</div><div class="mitori-body"><div class="m-row">473</div><div class="m-row">331</div><div class="m-row">748</div><div class="m-row">11</div><div class="m-row">138</div><div class="m-row">59</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">14</div><div class="mitori-body"><div class="m-row">430</div><div class="m-row">436</div><div class="m-row">224</div><div class="m-row">800</div><div class="m-row">94</div><div class="m-row">90</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">15</div><div class="mitori-body"><div class="m-row">460</div><div class="m-row">23</div><div class="m-row">20</div><div class="m-row">767</div><div class="m-row">793</div><div class="m-row">654</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">16</div><div class="mitori-body"><div class="m-row">164</div><div class="m-row">78</div><div class="m-row">-272</div><div class="m-row">-776</div><div class="m-row">32</div><div class="m-row">907</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">17</div><div class="mitori-body"><div class="m-row">54</div><div class="m-row">124</div><div class="m-row">835</div><div class="m-row">49</div><div class="m-row">662</div><div class="m-row">972</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">18</div><div class="mitori-body"><div class="m-row">28</div><div class="m-row">351</div><div class="m-row">926</div><div class="m-row">-89</div><div class="m-row">-129</div><div class="m-row">434</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">19</div><div class="mitori-body"><div class="m-row">781</div><div class="m-row">785</div><div class="m-row">-546</div><div class="m-row">883</div><div class="m-row">39</div><div class="m-row">-51</div></div><div class="m-ans-area"></div></div><div class="mitori-box"><div class="mitori-idx">20</div><div class="mitori-body"><div class="m-row">283</div><div class="m-row">419</div><div class="m-row">62</div><div class="m-row">615</div><div class="m-row">564</div><div class="m-row">80</div></div><div class="m-ans-area"></div></div></div>
+                <div class="mitori-wrapper mitori-anzan" id="anzan-area"></div>
                 <div class="score-box">
                     <table class="score-table">
-                        <tbody><tr><th>乗　算</th><th>除　算</th><th>見取算</th><th>暗　算</th><th style="border-top:2px solid #000;">合　計</th></tr>
+                        <tr><th>乗　算</th><th>除　算</th><th>見取算</th><th>暗　算</th><th style="border-top:2px solid #000;">合　計</th></tr>
                         <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td style="border-top:2px solid #000;">&nbsp;</td></tr>
-                    </tbody></table>
+                    </table>
                 </div>
             </div>
         </div>
@@ -663,6 +623,8 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
                 let dFrac = generateNonZeroDigits(dFracLen);
                 let dStr = dInt + "." + dFrac;
                 let valD = parseFloat(dStr); // 1.xx 〜 9.xxxx
+                let _dCount0 = getSorobanDigits(dStr);
+                if (_dCount0 < 3 || _dCount0 > 5) continue;
 
                 // 答え: 0.0xx（先頭0で被除数が確実に1未満）、ゼロなし
                 let aF1 = randInt(1, 9), aF2 = randInt(1, 9);
@@ -782,6 +744,7 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
                 let dStr = makeNumber(dBase, Math.random() < 0.5);
                 let valD = parseFloat(dStr);
                 let dCount = getSorobanDigits(dStr);
+                if (dCount < 3 || dCount > 5) continue; // 割る数は必ず3〜5個
                 let aLen2 = 8 - dCount;
                 if (aLen2 < 1 || aLen2 > 7) continue;
                 // 答えは整数
@@ -808,11 +771,11 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
             // forceSmallDivisor: 割る数が1未満（0.xxx）、割る数＋商=8桁
             if (forceSmallDivisor) {
                 // 除数を0.xxx形式（1〜4桁の小数）に固定
-                let dFracLen = randInt(1, 4);
+                let dFracLen = randInt(3, 5); // 0.xxx〜0.xxxxx → 数字3〜5個
                 let dFrac = generateNonZeroDigits(dFracLen);
                 let dStr = "0." + dFrac;
                 let valD = parseFloat(dStr);
-                let dCount = getSorobanDigits(dStr); // 小数点以下の桁数
+                let dCount = getSorobanDigits(dStr); // 小数点以下の桁数（3〜5）
                 let aLen2 = 8 - dCount;
                 if (aLen2 < 1 || aLen2 > 7) continue;
                 // 答えは整数
@@ -1307,43 +1270,5 @@ window.onload = () => {
     updateCounts();
 };
 </script>
-<!-- Code injected by live-server -->
-<script>
-	// <![CDATA[  <-- For SVG support
-	if ('WebSocket' in window) {
-		(function () {
-			function refreshCSS() {
-				var sheets = [].slice.call(document.getElementsByTagName("link"));
-				var head = document.getElementsByTagName("head")[0];
-				for (var i = 0; i < sheets.length; ++i) {
-					var elem = sheets[i];
-					var parent = elem.parentElement || head;
-					parent.removeChild(elem);
-					var rel = elem.rel;
-					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
-						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
-						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
-					}
-					parent.appendChild(elem);
-				}
-			}
-			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
-			var address = protocol + window.location.host + window.location.pathname + '/ws';
-			var socket = new WebSocket(address);
-			socket.onmessage = function (msg) {
-				if (msg.data == 'reload') window.location.reload();
-				else if (msg.data == 'refreshcss') refreshCSS();
-			};
-			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
-				console.log('Live reload enabled.');
-				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
-			}
-		})();
-	}
-	else {
-		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
-	}
-	// ]]>
-</script>
-
-</body></html>
+</body>
+</html>
