@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<!-- saved from url=(0045)http://127.0.0.1:5500/soro-tu-ru/request.html -->
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>問題リクエスト | 南大泉そろばん教室</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        header h1 { margin: 0; font-size: 28px; letter-spacing: 1px; }
+        header p { margin: 10px 0 0; opacity: 0.9; font-size: 16px; }
+
+        .breadcrumb {
+            max-width: 700px;
+            margin: 20px auto 0;
+            padding: 0 20px;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .breadcrumb a { color: #3b82f6; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+
+        .main-content {
+            max-width: 700px;
+            margin: 30px auto 60px;
+            padding: 0 20px;
+        }
+
+        /* --- PAGES --- */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* --- FORM PAGE --- */
+        .form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 36px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+        .form-card h2 {
+            font-size: 20px;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+        .form-card .subtitle {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 28px;
+        }
+        .field { margin-bottom: 20px; }
+        .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 7px;
+        }
+        .field label .required {
+            color: #ef4444;
+            margin-left: 4px;
+            font-weight: normal;
+        }
+        .field label .optional {
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: normal;
+            margin-left: 6px;
+        }
+        .field select,
+        .field input[type="text"],
+        .field textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #1e293b;
+            background: #fff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .field select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+        .field select:focus,
+        .field input[type="text"]:focus,
+        .field textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        .field textarea { height: 120px; resize: vertical; }
+        .field .hint { font-size: 12px; color: #94a3b8; margin-top: 5px; }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            margin-top: 8px;
+        }
+        .submit-btn:hover { opacity: 0.9; }
+        .submit-btn:active { transform: scale(0.99); }
+
+        .msg {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .msg-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .msg-error   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+        /* --- SUCCESS PAGE --- */
+        .success-card {
+            background: white;
+            border-radius: 16px;
+            padding: 48px 36px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+        .success-icon {
+            width: 64px; height: 64px;
+            background: #eff6ff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 28px;
+        }
+        .success-card h2 { font-size: 20px; color: #0f172a; margin-bottom: 10px; }
+        .success-card p { font-size: 14px; color: #64748b; margin-bottom: 28px; }
+        .back-btn {
+            display: inline-block;
+            padding: 12px 28px;
+            background: white;
+            color: #1e40af;
+            border: 1.5px solid #1e40af;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s, color 0.2s;
+        }
+        .back-btn:hover { background: #1e40af; color: white; }
+
+        /* --- ADMIN LOGIN PAGE --- */
+        .login-card {
+            background: white;
+            border-radius: 16px;
+            padding: 36px;
+            max-width: 400px;
+            margin: 0 auto;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+        .login-card h2 { font-size: 20px; margin-bottom: 6px; color: #0f172a; }
+        .login-card .subtitle { font-size: 13px; color: #94a3b8; margin-bottom: 24px; }
+
+        /* --- ADMIN PAGE --- */
+        .admin-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .admin-header h2 { font-size: 20px; color: #0f172a; }
+        .admin-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .count-badge {
+            font-size: 13px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 4px 12px;
+            color: #64748b;
+        }
+        .tab-row { display: flex; gap: 8px; margin-bottom: 20px; }
+        .tab {
+            padding: 7px 18px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            background: white;
+            cursor: pointer;
+            color: #64748b;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+        .tab.active {
+            background: #1e40af;
+            color: white;
+            border-color: #1e40af;
+            font-weight: bold;
+        }
+
+        .req-card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+            transition: box-shadow 0.15s;
+        }
+        .req-card.unread { border-left: 4px solid #3b82f6; }
+        .req-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .req-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .badge {
+            display: inline-block;
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 6px;
+            background: #eff6ff;
+            color: #1e40af;
+            font-weight: bold;
+        }
+        .unread-dot {
+            font-size: 12px;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+        .req-btns { display: flex; gap: 6px; flex-shrink: 0; }
+        .small-btn {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            font-family: inherit;
+            color: #374151;
+            transition: background 0.15s;
+        }
+        .small-btn:hover { background: #f1f5f9; }
+        .small-btn.danger { color: #dc2626; border-color: #fecaca; }
+        .small-btn.danger:hover { background: #fef2f2; }
+        .req-body {
+            font-size: 14px;
+            color: #1e293b;
+            margin-top: 12px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+        .req-meta { font-size: 12px; color: #94a3b8; margin-top: 8px; }
+        .empty {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            padding: 3rem 0;
+        }
+
+        .admin-link-row {
+            text-align: right;
+            margin-top: 40px;
+        }
+        .admin-link {
+            font-size: 12px;
+            color: #cbd5e1;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .admin-link:hover { color: #94a3b8; }
+
+        .footer {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>南大泉そろばん教室</h1>
+    <p>〜大会練習用問題作成ポータル〜</p>
+</header>
+
+<div class="main-content">
+
+    <!-- パンくず -->
+    <div class="breadcrumb">
+        <a href="http://127.0.0.1:5500/soro-tu-ru/index.html">ホーム</a> › 問題リクエスト
+    </div>
+
+    <!-- ===== フォームページ ===== -->
+    <div id="form-page" class="page active" style="margin-top: 24px;">
+        <div class="form-card">
+            <h2>📬 問題リクエスト</h2>
+            <p class="subtitle">練習してほしい問題や大会形式の要望を送ってください。匿名でも送れます。</p>
+            <div id="form-msg"></div>
+
+            <div class="field">
+                <label>学年 <span class="required">必須</span></label>
+                <select id="grade">
+                    <option value="">選択してください</option>
+                    <option>小学1年生</option>
+                    <option>小学2年生</option>
+                    <option>小学3年生</option>
+                    <option>小学4年生</option>
+                    <option>小学5年生</option>
+                    <option>小学6年生</option>
+                    <option>中学生</option>
+                    <option>高校生・一般</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>珠算の級・段 <span class="optional">任意</span></label>
+                <select id="level">
+                    <option value="">選択してください</option>
+                    <option>10級</option>
+                    <option>9級</option>
+                    <option>8級</option>
+                    <option>7級</option>
+                    <option>6級</option>
+                    <option>5級</option>
+                    <option>4級</option>
+                    <option>3級</option>
+                    <option>2級</option>
+                    <option>1級</option>
+                    <option>初段</option>
+                    <option>二段以上</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>要望内容 <span class="required">必須</span></label>
+                <textarea id="content" placeholder="例：掛け算の問題をもっと増やしてほしい、大会形式の問題が欲しい　など"></textarea>
+                <div class="hint">どんな小さなことでもOKです。自由に書いてください。</div>
+            </div>
+
+            <div class="field">
+                <label>お名前 <span class="optional">任意・匿名OK</span></label>
+                <input type="text" id="name" placeholder="入力しなくても送れます">
+            </div>
+
+            <button class="submit-btn" onclick="submitRequest()">送信する</button>
+        </div>
+
+        <div class="admin-link-row">
+            <a class="admin-link" onclick="showPage(&#39;admin-login-page&#39;)">先生用管理ページ</a>
+        </div>
+    </div>
+
+    <!-- ===== 送信完了ページ ===== -->
+    <div id="success-page" class="page" style="margin-top: 24px;">
+        <div class="success-card">
+            <div class="success-icon">✅</div>
+            <h2>送信しました！</h2>
+            <p>ご要望ありがとうございます。<br>先生が確認して問題に反映します。</p>
+            <button class="back-btn" onclick="resetForm()">続けてリクエストする</button>
+            &nbsp;
+            <a class="back-btn" href="http://127.0.0.1:5500/soro-tu-ru/index.html">ホームへ戻る</a>
+        </div>
+    </div>
+
+    <!-- ===== 管理者ログインページ ===== -->
+    <div id="admin-login-page" class="page" style="margin-top: 24px;">
+        <div class="login-card">
+            <h2>🔒 管理者ログイン</h2>
+            <p class="subtitle">先生専用ページです</p>
+            <div id="login-msg"></div>
+
+            <div class="field">
+                <label>パスワード</label>
+                <input type="password" id="pw" placeholder="パスワードを入力" onkeydown="if(event.key===&#39;Enter&#39;) login()">
+            </div>
+            <button class="submit-btn" onclick="login()">ログイン</button>
+            <div style="text-align:center; margin-top:16px;">
+                <a class="admin-link" onclick="showPage(&#39;form-page&#39;)" style="font-size:13px; color:#64748b;">← フォームへ戻る</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 管理ページ ===== -->
+    <div id="admin-page" class="page" style="margin-top: 24px;">
+        <div class="admin-header">
+            <h2>📋 受信した要望</h2>
+            <div class="admin-actions">
+                <span class="count-badge" id="count-badge">0件</span>
+                <button class="small-btn danger" onclick="clearAll()">全削除</button>
+                <button class="small-btn" onclick="logout()">ログアウト</button>
+            </div>
+        </div>
+
+        <div class="tab-row">
+            <button class="tab active" id="tab-all" onclick="filterRequests(&#39;all&#39;)">すべて</button>
+            <button class="tab" id="tab-unread" onclick="filterRequests(&#39;unread&#39;)">未読</button>
+            <button class="tab" id="tab-read" onclick="filterRequests(&#39;read&#39;)">既読</button>
+        </div>
+
+        <div id="request-list"></div>
+    </div>
+
+</div>
+
+<div class="footer">© 2026 南大泉そろばん教室 大会特訓プロジェクト</div>
+
+<script>
+    /* ===== 設定 ===== */
+    const ADMIN_PW   = 'soroban2026'; // ← パスワードはここを変更
+    const STORAGE_KEY = 'soroban_requests';
+
+    /* ===== ユーティリティ ===== */
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function setMsg(id, text, type) {
+        const el = document.getElementById(id);
+        el.innerHTML = text
+            ? `<div class="msg msg-${type}">${text}</div>`
+            : '';
+    }
+
+    function loadData() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+        catch(e) { return []; }
+    }
+
+    function saveData(list) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+
+    /* ===== フォーム送信 ===== */
+    function submitRequest() {
+        const grade   = document.getElementById('grade').value;
+        const content = document.getElementById('content').value.trim();
+        const level   = document.getElementById('level').value;
+        const name    = document.getElementById('name').value.trim();
+
+        if (!grade)   { setMsg('form-msg', '学年を選択してください', 'error'); return; }
+        if (!content) { setMsg('form-msg', '要望内容を入力してください', 'error'); return; }
+
+        const req = {
+            id: Date.now(),
+            grade, level, content,
+            name: name || '匿名',
+            date: new Date().toLocaleString('ja-JP'),
+            read: false
+        };
+
+        const list = loadData();
+        list.unshift(req);
+        saveData(list);
+        showPage('success-page');
+    }
+
+    function resetForm() {
+        document.getElementById('grade').value   = '';
+        document.getElementById('level').value   = '';
+        document.getElementById('content').value = '';
+        document.getElementById('name').value    = '';
+        setMsg('form-msg', '', '');
+        showPage('form-page');
+    }
+
+    /* ===== 管理者ログイン ===== */
+    function login() {
+        const pw = document.getElementById('pw').value;
+        if (pw === ADMIN_PW) {
+            document.getElementById('pw').value = '';
+            setMsg('login-msg', '', '');
+            showPage('admin-page');
+            loadRequests();
+        } else {
+            setMsg('login-msg', 'パスワードが違います', 'error');
+        }
+    }
+
+    function logout() {
+        showPage('form-page');
+    }
+
+    /* ===== 管理ページ ===== */
+    let currentFilter = 'all';
+
+    function filterRequests(type) {
+        currentFilter = type;
+        ['all','unread','read'].forEach(t => {
+            document.getElementById('tab-' + t).classList.toggle('active', t === type);
+        });
+        loadRequests();
+    }
+
+    function loadRequests() {
+        const all  = loadData();
+        const list = currentFilter === 'all'    ? all
+                   : currentFilter === 'unread' ? all.filter(r => !r.read)
+                   : all.filter(r => r.read);
+
+        document.getElementById('count-badge').textContent = all.length + '件';
+
+        const el = document.getElementById('request-list');
+        if (list.length === 0) {
+            el.innerHTML = '<div class="empty">要望はまだありません</div>';
+            return;
+        }
+
+        el.innerHTML = list.map(r => `
+            <div class="req-card ${r.read ? '' : 'unread'}">
+                <div class="req-card-top">
+                    <div class="req-badges">
+                        <span class="badge">${r.grade}</span>
+                        ${r.level ? `<span class="badge">${r.level}</span>` : ''}
+                        ${!r.read ? '<span class="unread-dot">● 未読</span>' : ''}
+                    </div>
+                    <div class="req-btns">
+                        ${!r.read ? `<button class="small-btn" onclick="markRead(${r.id})">既読にする</button>` : ''}
+                        <button class="small-btn danger" onclick="deleteReq(${r.id})">削除</button>
+                    </div>
+                </div>
+                <div class="req-body">${escapeHtml(r.content)}</div>
+                <div class="req-meta">${escapeHtml(r.name)} 　${r.date}</div>
+            </div>
+        `).join('');
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function markRead(id) {
+        const list = loadData();
+        const item = list.find(r => r.id === id);
+        if (item) item.read = true;
+        saveData(list);
+        loadRequests();
+    }
+
+    function deleteReq(id) {
+        const list = loadData().filter(r => r.id !== id);
+        saveData(list);
+        loadRequests();
+    }
+
+    function clearAll() {
+        if (!confirm('すべての要望を削除しますか？')) return;
+        saveData([]);
+        loadRequests();
+    }
+</script>
+
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+
+</body></html>
