@@ -614,6 +614,54 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
         if (isTop) {
             // ===== 前半(1-10問) =====
 
+            // forceInexact/forceIntInexact: 割り切れない問題（△マーク）
+            if (forceInexact || forceIntInexact) {
+                let dStr;
+                if (forceIntInexact) {
+                    dStr = dBase; // 整数固定
+                } else {
+                    dStr = makeNumber(dBase, Math.random() < 0.5);
+                }
+                let valD = parseFloat(dStr);
+                let dCount = getSorobanDigits(dStr);
+                if (dCount < 3 || dCount > 5) continue;
+
+                // 被除数をランダム生成
+                let nLen = randInt(3, 8);
+                let nBase = generateNonZeroDigits(nLen);
+                let nStr = forceIntInexact ? nBase : makeNumber(nBase, Math.random() < 0.5);
+                if (nStr.includes("0") && !nStr.startsWith("0.")) continue;
+
+                let valN = parseFloat(nStr);
+                let quotient = valN / valD;
+
+                // 前半: 小数第3位が4か5（四捨五入ボーダー）
+                let borderDigit = isTop
+                    ? Math.floor(quotient * 10000) % 10
+                    : Math.floor(quotient * 10) % 10;
+                if (borderDigit !== 4 && borderDigit !== 5) continue;
+
+                let ansVal = isTop ? (Math.round(quotient * 1000) / 1000) : Math.round(quotient);
+                let ansStr = isTop
+                    ? ansVal.toFixed(3).replace(/0+$/, '').replace(/\.$/, '')
+                    : String(ansVal);
+                if (!ansStr || ansStr === '0') continue;
+
+                let aCount = getSorobanDigits(ansStr);
+                if (dCount + aCount !== 8) continue;
+                let nDigits = getSorobanDigits(nStr);
+                if (nDigits < 2 || nDigits > 8) continue;
+
+                const _ikey = nStr + "|" + dStr;
+                if (usedKeys && usedKeys.has(_ikey)) continue;
+                if (usedKeys) usedKeys.add(_ikey);
+
+                return {
+                    dividend: nStr, divisor: dStr, answer: addCommas(ansStr),
+                    display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span><span class="diff-mark">△</span>`
+                };
+            }
+
             // forceSmallDividend: 被除数(割られる数)を1未満にする
             // 方針: 除数を小数(1.xxx〜9.xxx)、答えも小数(0.0xx〜0.0xx) → 被除数=除数×答え < 1
             if (forceSmallDividend) {
@@ -731,12 +779,55 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
 
                 return {
                     dividend: nStr, divisor: dStr, answer: addCommas(ansStr),
-                    display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span><span class="diff-mark">★</span>`
+                    display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span><span class="diff-mark">★△</span>`
                 };
             }
 
         } else {
             // ===== 後半(11-20問) =====
+
+            // forceInexact/forceIntInexact (後半): 割り切れない問題（△マーク）
+            if (forceInexact || forceIntInexact) {
+                let dStr;
+                if (forceIntInexact) {
+                    dStr = dBase; // 整数固定
+                } else {
+                    dStr = makeNumber(dBase, Math.random() < 0.5);
+                }
+                let valD = parseFloat(dStr);
+                let dCount = getSorobanDigits(dStr);
+                if (dCount < 3 || dCount > 5) continue;
+
+                // 被除数をランダム生成（後半は整数÷整数も含む）
+                let nLen = randInt(3, 8);
+                let nBase = generateNonZeroDigits(nLen);
+                let nStr = forceIntInexact ? nBase : makeNumber(nBase, Math.random() < 0.5);
+                if (nStr.includes("0") && !nStr.startsWith("0.")) continue;
+
+                let valN = parseFloat(nStr);
+                let quotient = valN / valD;
+
+                // 後半: 整数位未満四捨五入 → 小数第1位が4か5
+                let borderDigit = Math.floor(quotient * 10) % 10;
+                if (borderDigit !== 4 && borderDigit !== 5) continue;
+
+                let ansStr = String(Math.round(quotient));
+                if (!ansStr || ansStr === '0') continue;
+
+                let aCount = getSorobanDigits(ansStr);
+                if (dCount + aCount !== 8) continue;
+                let nDigits = getSorobanDigits(nStr);
+                if (nDigits < 2 || nDigits > 8) continue;
+
+                const _ikey2 = nStr + "|" + dStr;
+                if (usedKeys && usedKeys.has(_ikey2)) continue;
+                if (usedKeys) usedKeys.add(_ikey2);
+
+                return {
+                    dividend: nStr, divisor: dStr, answer: addCommas(ansStr),
+                    display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span><span class="diff-mark">△</span>`
+                };
+            }
 
             // forceShortDividend: 被除数が3〜5桁、割る数＋商=8桁
             if (forceShortDividend) {
@@ -835,72 +926,77 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
 function generateDivSet(total) {
     const list = [];
 
-    // 還付トラップ3問をなるべく後半(10-19)に割り当て、前半への影響を最小化
+    // 還付トラップ3問をなるべく後半(10-19)に割り当て
     const backIndices = [9,10,11,12,13,14,15,16,17,18,19].sort(() => Math.random() - 0.5);
     const kampuIndices = new Set(backIndices.slice(0, 3));
 
-    // 前半10問の枠割り当て（0-indexed、kampu以外から順に確保）
-    // 構成: intDiv×4, star×(2or3), smallAnswer×2, smallDividend×1, 残り通常
-    const starCount = Math.random() < 0.5 ? 2 : 3;
+    // =====================================================================
+    // 割り切れない問題を全体6問（3割）に統一
+    // ★四捨五入ボーダー問題は定義上必ず割り切れないため、★=割り切れないとして扱う
+    // 前半3問: ★2問（うち整数÷整数1問）、普通の割り切れない1問
+    // 後半3問: ★2問（うち整数÷整数1問）、普通の割り切れない1問
+    // =====================================================================
 
     const frontIndices = [0,1,2,3,4,5,6,7,8,9]
         .filter(i => !kampuIndices.has(i))
         .sort(() => Math.random() - 0.5);
 
+    // 前半の確定枠（割り切れない以外）
     let cursor = 0;
-    const intDivIndices       = new Set(frontIndices.slice(cursor, cursor += 4));
-    const starIndices          = new Set(frontIndices.slice(cursor, cursor += starCount));
-    const smallAnswerIndices   = new Set(frontIndices.slice(cursor, cursor += 2));
-    const smallDividendIndices = new Set(frontIndices.slice(cursor, cursor += 1));
-    const inexactIndices       = new Set(frontIndices.slice(cursor, cursor += 2)); // 割り切れない2問
-    const intInexactIndices    = new Set(frontIndices.slice(cursor, cursor += 1)); // 整数÷整数割り切れない1問
+    const intDivIndices        = new Set(frontIndices.slice(cursor, cursor += 4)); // 整数同士4問
+    const smallAnswerIndices   = new Set(frontIndices.slice(cursor, cursor += 2)); // 答え1未満2問
+    const smallDividendIndices = new Set(frontIndices.slice(cursor, cursor += 1)); // 割られる数1未満1問
+    // 割り切れない3問: ★(通常)1問、★(整数÷整数)1問、普通の割り切れない1問
+    const frontStarIndices     = new Set(frontIndices.slice(cursor, cursor += 1)); // ★前半1問
+    const frontIntInexactIndices = new Set(frontIndices.slice(cursor, cursor += 1)); // 整数÷整数割り切れない1問
+    const frontInexactIndices  = new Set(frontIndices.slice(cursor, cursor += 1)); // 普通の割り切れない1問
 
     const firstHalfProblems = new Array(10).fill(null);
     const divUsedKeys = new Set();
 
-    // パス1: 整数同士（4問）
+    // パス1: 整数同士・割り切れる（4問）
     for (const idx of intDivIndices) {
-        let p = generateOneDiv(true, false, false, true, false, false, false, false, false);
+        let p = generateOneDiv(true, false, false, true, false, false, false, false, false, false, false, divUsedKeys);
         p.no = idx + 1;
         firstHalfProblems[idx] = p;
     }
 
-    // パス2: ★四捨五入ボーダー（2〜3問）
-    for (const idx of starIndices) {
-        let p = generateOneDiv(true, false, false, false, true, false, false, false, false);
-        p.no = idx + 1;
-        firstHalfProblems[idx] = p;
-    }
-
-    // パス3: 答えが1未満（2問）
+    // パス2: 答えが1未満（2問）
     for (const idx of smallAnswerIndices) {
-        let p = generateOneDiv(true, false, false, false, false, true, false, false, false);
+        let p = generateOneDiv(true, false, false, false, false, true, false, false, false, false, false, divUsedKeys);
         p.no = idx + 1;
         firstHalfProblems[idx] = p;
     }
 
-    // パス4: 割られる数が1未満（1問）
+    // パス3: 割られる数が1未満（1問）
     for (const idx of smallDividendIndices) {
-        let p = generateOneDiv(true, false, false, false, false, false, true, false, false);
+        let p = generateOneDiv(true, false, false, false, false, false, true, false, false, false, false, divUsedKeys);
         p.no = idx + 1;
         firstHalfProblems[idx] = p;
     }
 
-    // パス5: 割り切れない問題（2問）
-    for (const idx of inexactIndices) {
-        let p = generateOneDiv(true, false, false, false, false, false, false, true, false);
+    // パス4: ★四捨五入ボーダー・割り切れない（1問）
+    for (const idx of frontStarIndices) {
+        let p = generateOneDiv(true, false, false, false, true, false, false, false, false, false, false, divUsedKeys);
         p.no = idx + 1;
         firstHalfProblems[idx] = p;
     }
 
-    // パス6: 整数÷整数で割り切れない（1問）
-    for (const idx of intInexactIndices) {
-        let p = generateOneDiv(true, false, false, false, false, false, false, false, true);
+    // パス5: 整数÷整数・割り切れない（1問）
+    for (const idx of frontIntInexactIndices) {
+        let p = generateOneDiv(true, false, false, false, false, false, false, false, true, false, false, divUsedKeys);
         p.no = idx + 1;
         firstHalfProblems[idx] = p;
     }
 
-    // パス7: 残り（還付トラップ含む通常）
+    // パス6: 普通の割り切れない（1問）
+    for (const idx of frontInexactIndices) {
+        let p = generateOneDiv(true, false, false, false, false, false, false, true, false, false, false, divUsedKeys);
+        p.no = idx + 1;
+        firstHalfProblems[idx] = p;
+    }
+
+    // パス7: 残り（還付トラップ含む通常・割り切れる）
     for (let idx = 0; idx < 10; idx++) {
         if (firstHalfProblems[idx] !== null) continue;
         let isKampu = kampuIndices.has(idx);
@@ -914,8 +1010,9 @@ function generateDivSet(total) {
         .filter(i => !kampuIndices.has(i))
         .sort(() => Math.random() - 0.5);
     let bCursor = 0;
-    const backInexactIndices     = new Set(backNonKampu.slice(bCursor, bCursor += 2)); // 割り切れない2問
+    const backStarIndices        = new Set(backNonKampu.slice(bCursor, bCursor += 1)); // ★後半1問
     const backIntInexactIndices  = new Set(backNonKampu.slice(bCursor, bCursor += 1)); // 整数÷整数割り切れない1問
+    const backInexactIndices     = new Set(backNonKampu.slice(bCursor, bCursor += 1)); // 普通の割り切れない1問
     const backShortDivIndices    = new Set(backNonKampu.slice(bCursor, bCursor += 2)); // 被除数3〜5桁2問
     const backSmallDivisorIndices= new Set(backNonKampu.slice(bCursor, bCursor += 2)); // 割る数1未満2問
 
@@ -924,7 +1021,10 @@ function generateDivSet(total) {
     for (let i = 10; i < total; i++) {
         let isKampu = kampuIndices.has(i);
         let p;
-        if (backIntInexactIndices.has(i)) {
+        if (backStarIndices.has(i)) {
+            // 後半の★: 整数位未満四捨五入のボーダー（割り切れない）
+            p = generateOneDiv(false, false, false, false, false, false, false, true, false, false, false, divUsedKeys);
+        } else if (backIntInexactIndices.has(i)) {
             p = generateOneDiv(false, false, false, false, false, false, false, false, true, false, false, divUsedKeys);
         } else if (backInexactIndices.has(i)) {
             p = generateOneDiv(false, false, false, false, false, false, false, true, false, false, false, divUsedKeys);
