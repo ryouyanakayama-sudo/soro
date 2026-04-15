@@ -1,0 +1,1964 @@
+<!DOCTYPE html>
+<!-- saved from url=(0056)http://127.0.0.1:5500/soro-tu-ru/nerima-junior-high.html -->
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全珠連練馬地区珠算競技大会 (3級・完成版)</title>
+    <style>
+        /* フォント設定 */
+        @font-face {
+            font-family: 'ABACUS2';
+            src: local('ABACUS2'), local('Abacus2');
+        }
+
+        body { 
+            margin: 0;
+            padding: 0;
+            background-color: #ccc; 
+            font-family: "Hiragino Mincho ProN", "MS Mincho", serif;
+        }
+
+        @page {
+            size: B4 portrait;
+            margin: 0; 
+        }
+
+        .sheet {
+            width: 257mm;
+            height: 364mm;
+            background: white;
+            margin: 20px auto;
+            padding: 10mm 15mm; 
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
+        }
+
+        /* 操作パネル */
+        .controls {
+            padding: 10px;
+            text-align: center;
+            background: #333;
+            color: white;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+        }
+        .controls button {
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        .spacer { height: 60px; }
+
+        /* ヘッダー */
+        h1 {
+            text-align: center;
+            font-size: 22pt;
+            margin: 0;
+            line-height: 1.1;
+            letter-spacing: 2px;
+        }
+        .sub-header {
+            text-align: center;
+            font-size: 13pt;
+            margin-top: 2mm;
+            margin-bottom: 3mm;
+            border-bottom: 2px solid #000;
+            padding-bottom: 1mm;
+            font-weight: bold;
+        }
+
+        /* --- 計算問題 (かけ・わり) --- */
+        .calc-wrapper {
+            display: flex;
+            justify-content: space-between;
+            height: calc(100% - 30mm);
+            border-bottom: 1px solid #000;
+        }
+        .calc-col {
+            width: 49%;
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid #000;
+        }
+        .rule-header {
+            text-align: center;
+            font-size: 9pt;
+            background: #eee;
+            border-bottom: 1px solid #000;
+            border-left: 1px solid #000;
+            border-right: 1px solid #000;
+            padding: 2px 0;
+            font-weight: bold;
+        }
+        .calc-row {
+            flex: 1;
+            display: flex;
+            border-bottom: 1px solid #000;
+            border-left: 1px solid #000;
+            border-right: 1px solid #000;
+            align-items: center;
+            overflow: hidden;
+            padding-right: 1mm; 
+        }
+        .idx {
+            width: 10mm;
+            height: 100%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10pt;
+            border-right: 1px solid #000;
+            flex-shrink: 0;
+        }
+        .prob {
+            flex-grow: 1;
+            display: flex;
+            justify-content: flex-end; 
+            align-items: center;
+            padding-right: 1mm;
+            overflow: hidden;
+            white-space: nowrap; 
+        }
+        .prob-num {
+            font-family: 'ABACUS2', monospace;
+            font-size: 10pt;
+            text-align: right;
+            white-space: nowrap;
+        }
+        .symbol { 
+            font-family: "Times New Roman", serif; 
+            margin-left: 2px;
+            margin-right: 2px;
+            font-size: 11pt;
+            flex-shrink: 0; 
+        }
+        .ans-space {
+            flex: 0 0 40mm;
+            width: 40mm;
+            height: 100%;
+            /* 点線を削除 */
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        /* --- みとり算レイアウト --- */
+        .mitori-wrapper {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 2mm;
+            height: calc(100% - 30mm);
+        }
+        .mitori-box {
+            border: 1px solid #000;
+            display: grid;
+            grid-template-rows: 5mm 1fr 10mm; 
+            height: 100%;
+            box-sizing: border-box;
+        }
+        .mitori-idx {
+            background: #e0e0e0;
+            text-align: center;
+            border-bottom: 1px solid #000;
+            line-height: 5mm;
+            font-size: 9pt;
+            overflow: hidden;
+        }
+        .mitori-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            padding-right: 3mm;
+            overflow: hidden;
+        }
+        .m-row {
+            font-family: 'ABACUS2', monospace;
+            white-space: nowrap;
+            letter-spacing: -1px;
+            font-size: 11pt; 
+            line-height: 1.1;
+            text-align: right;
+        }
+        .m-ans-area { 
+            border-top: 1px solid #000; 
+            position: relative; 
+            width: 100%; 
+        }
+
+        /* --- 暗算レイアウト --- */
+        #anzan-area { 
+            height: calc(100% - 50mm); 
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 2mm;
+            margin-bottom: 5mm;
+        }
+        .anzan-box {
+            border: 1px solid #000;
+            display: grid;
+            grid-template-rows: 5mm 1fr 8mm; 
+            height: 100%;
+            box-sizing: border-box;
+        }
+        .anzan-idx {
+            background: #e0e0e0;
+            text-align: center;
+            border-bottom: 1px solid #000;
+            line-height: 5mm;
+            font-size: 9pt;
+        }
+        .anzan-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            padding-right: 8mm; 
+            overflow: hidden;
+        }
+        .anzan-row {
+            font-family: 'ABACUS2', monospace;
+            font-size: 13pt; 
+            line-height: 1.2;
+            letter-spacing: 1px;
+        }
+        .anzan-ans {
+            border-top: 1px solid #000;
+            position: relative;
+            width: 100%;
+        }
+
+        /* --- 点数表 --- */
+        .score-box {
+            position: absolute;
+            bottom: 12mm;
+            right: 15mm;
+            width: 110mm;
+            background: #fff;
+            border: 2px solid #000;
+            z-index: 10;
+        }
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11pt;
+            text-align: center;
+        }
+        .score-table th, .score-table td {
+            border: 1px solid #000;
+            padding: 6px 0;
+        }
+        .score-table th { background: #f0f0f0; font-weight: bold; width: 18%; }
+        .score-total { border-top: 2px solid #000; font-weight: bold; }
+
+        /* --- 解答一覧表 --- */
+        .answer-sheet-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; 
+        }
+        .master-ans-table {
+            width: 95%;
+            border-collapse: collapse;
+            font-family: 'ABACUS2', monospace; 
+            font-size: 10.5pt;
+            margin-top: 2mm;
+        }
+        .master-ans-table th, .master-ans-table td {
+            border: 1px solid #000;
+            padding: 1px 4px;
+            text-align: right; 
+            height: 7.5mm; 
+            line-height: 1.1;
+        }
+        .master-ans-table th {
+            background: #f0f0f0;
+            text-align: center;
+            font-family: "Hiragino Mincho ProN", "MS Mincho", serif;
+            font-weight: bold;
+            height: 8mm; 
+        }
+        .col-idx { 
+            text-align: center !important; 
+            background: #fafafa; 
+            width: 10mm; 
+            font-family: sans-serif;
+            font-size: 10pt;
+        }
+
+        /* --- 答え表示 --- */
+        .hidden-ans {
+            display: none;
+            color: red;
+            font-weight: bold;
+            font-family: sans-serif;
+            position: absolute;
+            font-size: 11pt;
+            z-index: 999;
+            pointer-events: none;
+        }
+        body.show-ans .hidden-ans { display: block; }
+        
+        .ans-space .hidden-ans { right: 50%; top: 50%; transform: translate(50%, -50%); }
+        .m-ans-area .hidden-ans { right: 2mm; bottom: 2mm; }
+        .anzan-ans .hidden-ans { right: 2mm; bottom: 2mm; }
+
+        @media print {
+            body { 
+                background: white; 
+                -webkit-print-color-adjust: exact;
+                margin: 0;
+                padding: 0;
+            }
+            .controls, .spacer { display: none; }
+            .sheet { 
+                margin: 0; 
+                box-shadow: none; 
+                height: 362mm; 
+                width: 257mm; 
+                page-break-after: always;
+                border: none;
+            }
+            .sheet:last-of-type { page-break-after: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="controls">
+    <button onclick="generateAll()">問題を再生成</button>
+    <button onclick="document.body.classList.toggle(&#39;show-ans&#39;)">問題用紙に答えを表示/非表示</button>
+    <button onclick="window.print()">印刷する (B4)</button>
+</div>
+<div class="spacer"></div>
+
+<div class="sheet">
+    <h1>全珠連練馬地区珠算競技大会</h1>
+    <div class="sub-header">種目：かけ算　(制限時間 4分)</div>
+    <div class="calc-wrapper">
+        <div class="calc-col" id="kake-left"><div class="rule-header">小数第3未満位四捨五入</div>
+            <div class="calc-row">
+                <div class="idx">1</div>
+                <div class="prob">
+                    <span class="prob-num">3,641 <span class="symbol">×</span> 9,355</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">34,061,555</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">2</div>
+                <div class="prob">
+                    <span class="prob-num">889 <span class="symbol">×</span> 59,696</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">53,069,744</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">3</div>
+                <div class="prob">
+                    <span class="prob-num">7,817 <span class="symbol">×</span> 5,698</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">44,541,266</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">4</div>
+                <div class="prob">
+                    <span class="prob-num">6,069 <span class="symbol">×</span> 4,346</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">26,375,874</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">5</div>
+                <div class="prob">
+                    <span class="prob-num">474 <span class="symbol">×</span> 0.91857</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">435.402</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">6</div>
+                <div class="prob">
+                    <span class="prob-num">0.81128 <span class="symbol">×</span> 899</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">729.341</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">7</div>
+                <div class="prob">
+                    <span class="prob-num">651 <span class="symbol">×</span> 52,713</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">34,316,163</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">8</div>
+                <div class="prob">
+                    <span class="prob-num">6,872 <span class="symbol">×</span> 0.0768</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">527.77</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">9</div>
+                <div class="prob">
+                    <span class="prob-num">2,619 <span class="symbol">×</span> 6,263</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">16,402,797</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">10</div>
+                <div class="prob">
+                    <span class="prob-num">639 <span class="symbol">×</span> 0.29611</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">189.214</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">11</div>
+                <div class="prob">
+                    <span class="prob-num">62,346 <span class="symbol">×</span> 576</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">35,911,296</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">12</div>
+                <div class="prob">
+                    <span class="prob-num">0.497 <span class="symbol">×</span> 54,235</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">26,954.795</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">13</div>
+                <div class="prob">
+                    <span class="prob-num">735 <span class="symbol">×</span> 0.93589</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">687.879</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">14</div>
+                <div class="prob">
+                    <span class="prob-num">444 <span class="symbol">×</span> 0.13807</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">61.303</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">15</div>
+                <div class="prob">
+                    <span class="prob-num">96,459 <span class="symbol">×</span> 0.113</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">10,899.867</span>
+                </div>
+            </div>
+        </div>
+        <div class="calc-col" id="kake-right"><div class="rule-header">整数位未満四捨五入</div>
+            <div class="calc-row">
+                <div class="idx">16</div>
+                <div class="prob">
+                    <span class="prob-num">864 <span class="symbol">×</span> 79,666</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">68,831,424</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">17</div>
+                <div class="prob">
+                    <span class="prob-num">7,803 <span class="symbol">×</span> 8,891</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">69,376,473</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">18</div>
+                <div class="prob">
+                    <span class="prob-num">0.4705 <span class="symbol">×</span> 6,238</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">2,935</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">19</div>
+                <div class="prob">
+                    <span class="prob-num">96,118 <span class="symbol">×</span> 928</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">89,197,504</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">20</div>
+                <div class="prob">
+                    <span class="prob-num">654 <span class="symbol">×</span> 55,826</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">36,510,204</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">21</div>
+                <div class="prob">
+                    <span class="prob-num">2,866 <span class="symbol">×</span> 3,371</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">9,661,286</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">22</div>
+                <div class="prob">
+                    <span class="prob-num">1,544 <span class="symbol">×</span> 2,743</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">4,235,192</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">23</div>
+                <div class="prob">
+                    <span class="prob-num">33,561 <span class="symbol">×</span> 959</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">32,184,999</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">24</div>
+                <div class="prob">
+                    <span class="prob-num">419 <span class="symbol">×</span> 12,374</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">5,184,706</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">25</div>
+                <div class="prob">
+                    <span class="prob-num">2,519 <span class="symbol">×</span> 0.1461</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">368</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">26</div>
+                <div class="prob">
+                    <span class="prob-num">7,271 <span class="symbol">×</span> 7,928</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">57,644,488</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">27</div>
+                <div class="prob">
+                    <span class="prob-num">31,578 <span class="symbol">×</span> 338</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">10,673,364</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">28</div>
+                <div class="prob">
+                    <span class="prob-num">849 <span class="symbol">×</span> 0.65897</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">559</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">29</div>
+                <div class="prob">
+                    <span class="prob-num">4,738 <span class="symbol">×</span> 8,123</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">38,486,774</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">30</div>
+                <div class="prob">
+                    <span class="prob-num">836 <span class="symbol">×</span> 87,479</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">73,132,444</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="sheet">
+    <h1>全珠連練馬地区珠算競技大会</h1>
+    <div class="sub-header">種目：わり算　(制限時間 4分)</div>
+    <div class="calc-wrapper">
+        <div class="calc-col" id="wari-left"><div class="rule-header">小数第3位未満四捨五入</div>
+            <div class="calc-row">
+                <div class="idx">1</div>
+                <div class="prob">
+                    <span class="prob-num">727.056 <span class="symbol">÷</span> 660.96</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">1.1</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">2</div>
+                <div class="prob">
+                    <span class="prob-num">651.4534 <span class="symbol">÷</span> 7,058</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">0.092</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">3</div>
+                <div class="prob">
+                    <span class="prob-num">30.2385 <span class="symbol">÷</span> 10.61</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">2.85</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">4</div>
+                <div class="prob">
+                    <span class="prob-num">3,933,678 <span class="symbol">÷</span> 73</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">53,886</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">5</div>
+                <div class="prob">
+                    <span class="prob-num">451.6083 <span class="symbol">÷</span> 0.087</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">5,190.9</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">6</div>
+                <div class="prob">
+                    <span class="prob-num">1,803,802 <span class="symbol">÷</span> 2,618</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">689</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">7</div>
+                <div class="prob">
+                    <span class="prob-num">1,642,486 <span class="symbol">÷</span> 61</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">26,926</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">8</div>
+                <div class="prob">
+                    <span class="prob-num">21.43713 <span class="symbol">÷</span> 2.717</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">7.89</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">9</div>
+                <div class="prob">
+                    <span class="prob-num">2,692,668 <span class="symbol">÷</span> 81,596</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">33</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">10</div>
+                <div class="prob">
+                    <span class="prob-num">288.0338 <span class="symbol">÷</span> 0.053</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">5,434.6</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">11</div>
+                <div class="prob">
+                    <span class="prob-num">476,514 <span class="symbol">÷</span> 1,151</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">414</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">12</div>
+                <div class="prob">
+                    <span class="prob-num">3,029.36 <span class="symbol">÷</span> 9,965</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">0.304</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">13</div>
+                <div class="prob">
+                    <span class="prob-num">0.578826 <span class="symbol">÷</span> 0.01458</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">39.7</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">14</div>
+                <div class="prob">
+                    <span class="prob-num">10.57171 <span class="symbol">÷</span> 0.83</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">12.737</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">15</div>
+                <div class="prob">
+                    <span class="prob-num">5.030896 <span class="symbol">÷</span> 0.09386</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">53.6</span>
+                </div>
+            </div>
+        </div>
+        <div class="calc-col" id="wari-right"><div class="rule-header">整数位未満四捨五入</div>
+            <div class="calc-row">
+                <div class="idx">16</div>
+                <div class="prob">
+                    <span class="prob-num">24,178.07 <span class="symbol">÷</span> 456.19</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">53</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">17</div>
+                <div class="prob">
+                    <span class="prob-num">106,307.5 <span class="symbol">÷</span> 8,177.5</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">13</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">18</div>
+                <div class="prob">
+                    <span class="prob-num">15,608.32 <span class="symbol">÷</span> 17.42</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">896</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">19</div>
+                <div class="prob">
+                    <span class="prob-num">210,924 <span class="symbol">÷</span> 976.5</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">216</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">20</div>
+                <div class="prob">
+                    <span class="prob-num">153,368.7 <span class="symbol">÷</span> 4,145.1</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">37</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">21</div>
+                <div class="prob">
+                    <span class="prob-num">54,158.4 <span class="symbol">÷</span> 4,513.2</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">12</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">22</div>
+                <div class="prob">
+                    <span class="prob-num">131 <span class="symbol">÷</span> 11.911</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">11</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">23</div>
+                <div class="prob">
+                    <span class="prob-num">1,042,398 <span class="symbol">÷</span> 21</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">49,638</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">24</div>
+                <div class="prob">
+                    <span class="prob-num">6,179,654 <span class="symbol">÷</span> 778</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">7,943</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">25</div>
+                <div class="prob">
+                    <span class="prob-num">108,081.6 <span class="symbol">÷</span> 2,349.6</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">46</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">26</div>
+                <div class="prob">
+                    <span class="prob-num">90,744.66 <span class="symbol">÷</span> 95.22</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">953</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">27</div>
+                <div class="prob">
+                    <span class="prob-num">3,818,892 <span class="symbol">÷</span> 8,266</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">462</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">28</div>
+                <div class="prob">
+                    <span class="prob-num">460,785.3 <span class="symbol">÷</span> 596.1</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">773</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">29</div>
+                <div class="prob">
+                    <span class="prob-num">35,946.24 <span class="symbol">÷</span> 485.76</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">74</span>
+                </div>
+            </div>
+        
+            <div class="calc-row">
+                <div class="idx">30</div>
+                <div class="prob">
+                    <span class="prob-num">367 <span class="symbol">÷</span> 0.017</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">21,588</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="sheet">
+    <h1>全珠連練馬地区珠算競技大会</h1>
+    <div class="sub-header">種目：みとり算　(制限時間 4分)</div>
+    <div class="mitori-wrapper" id="mitori-area">
+            <div class="mitori-box">
+                <div class="mitori-idx">1</div>
+                <div class="mitori-body"><div class="m-row">1,939</div><div class="m-row">14,713</div><div class="m-row">1,733</div><div class="m-row">6,174</div><div class="m-row">8,788</div><div class="m-row">615,410</div><div class="m-row">537,094</div><div class="m-row">68,982</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">1,254,833</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">2</div>
+                <div class="mitori-body"><div class="m-row">61,736</div><div class="m-row">7,911</div><div class="m-row">-1,491</div><div class="m-row">-63,136</div><div class="m-row">48,207</div><div class="m-row">79,701</div><div class="m-row">-91,385</div><div class="m-row">58,001</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">99,544</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">3</div>
+                <div class="mitori-body"><div class="m-row">8,565</div><div class="m-row">77,543</div><div class="m-row">56,049</div><div class="m-row">4,424</div><div class="m-row">73,184</div><div class="m-row">46,831</div><div class="m-row">27,209</div><div class="m-row">92,774</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">386,579</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">4</div>
+                <div class="mitori-body"><div class="m-row">-1,343</div><div class="m-row">19,910</div><div class="m-row">-8,107</div><div class="m-row">785,282</div><div class="m-row">43,065</div><div class="m-row">7,143</div><div class="m-row">8,960</div><div class="m-row">-303,776</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">551,134</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">5</div>
+                <div class="mitori-body"><div class="m-row">47,495</div><div class="m-row">9,597</div><div class="m-row">392,392</div><div class="m-row">6,771</div><div class="m-row">7,829</div><div class="m-row">2,450</div><div class="m-row">118,681</div><div class="m-row">23,803</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">609,018</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">6</div>
+                <div class="mitori-body"><div class="m-row">22,622</div><div class="m-row">-636,235</div><div class="m-row">5,993</div><div class="m-row">-4,967</div><div class="m-row">-5,524</div><div class="m-row">84,006</div><div class="m-row">145,944</div><div class="m-row">8,081</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">-380,080</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">7</div>
+                <div class="mitori-body"><div class="m-row">4,098</div><div class="m-row">82,057</div><div class="m-row">56,813</div><div class="m-row">58,758</div><div class="m-row">63,100</div><div class="m-row">-47,422</div><div class="m-row">-3,105</div><div class="m-row">-87,669</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">126,630</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">8</div>
+                <div class="mitori-body"><div class="m-row">34,350</div><div class="m-row">12,834</div><div class="m-row">89,612</div><div class="m-row">76,822</div><div class="m-row">5,016</div><div class="m-row">30,601</div><div class="m-row">4,977</div><div class="m-row">31,625</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">285,837</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">9</div>
+                <div class="mitori-body"><div class="m-row">5,498</div><div class="m-row">4,011</div><div class="m-row">30,522</div><div class="m-row">-785,382</div><div class="m-row">31,870</div><div class="m-row">4,657</div><div class="m-row">-563,209</div><div class="m-row">-4,425</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">-1,276,458</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">10</div>
+                <div class="mitori-body"><div class="m-row">7,862</div><div class="m-row">43,165</div><div class="m-row">6,218</div><div class="m-row">-1,131</div><div class="m-row">935,483</div><div class="m-row">-1,867</div><div class="m-row">66,256</div><div class="m-row">-775,831</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">280,155</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">11</div>
+                <div class="mitori-body"><div class="m-row">9,342</div><div class="m-row">63,576</div><div class="m-row">4,157</div><div class="m-row">63,070</div><div class="m-row">46,067</div><div class="m-row">43,618</div><div class="m-row">53,852</div><div class="m-row">48,706</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">332,388</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">12</div>
+                <div class="mitori-body"><div class="m-row">9,543</div><div class="m-row">18,524</div><div class="m-row">87,413</div><div class="m-row">29,924</div><div class="m-row">32,874</div><div class="m-row">39,326</div><div class="m-row">5,127</div><div class="m-row">58,934</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">281,665</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">13</div>
+                <div class="mitori-body"><div class="m-row">727,843</div><div class="m-row">19,821</div><div class="m-row">9,195</div><div class="m-row">4,621</div><div class="m-row">8,501</div><div class="m-row">64,484</div><div class="m-row">4,297</div><div class="m-row">868,257</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">1,707,019</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">14</div>
+                <div class="mitori-body"><div class="m-row">51,470</div><div class="m-row">84,809</div><div class="m-row">15,492</div><div class="m-row">4,723</div><div class="m-row">36,146</div><div class="m-row">83,075</div><div class="m-row">63,703</div><div class="m-row">9,097</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">348,515</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">15</div>
+                <div class="mitori-body"><div class="m-row">11,308</div><div class="m-row">7,870</div><div class="m-row">7,834</div><div class="m-row">482,493</div><div class="m-row">779,416</div><div class="m-row">34,178</div><div class="m-row">5,142</div><div class="m-row">4,180</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">1,332,421</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">16</div>
+                <div class="mitori-body"><div class="m-row">863,210</div><div class="m-row">78,790</div><div class="m-row">8,404</div><div class="m-row">936,769</div><div class="m-row">5,945</div><div class="m-row">39,484</div><div class="m-row">5,399</div><div class="m-row">2,522</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">1,940,523</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">17</div>
+                <div class="mitori-body"><div class="m-row">4,446</div><div class="m-row">249,959</div><div class="m-row">7,988</div><div class="m-row">661,593</div><div class="m-row">55,671</div><div class="m-row">2,580</div><div class="m-row">2,340</div><div class="m-row">59,595</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">1,044,172</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">18</div>
+                <div class="mitori-body"><div class="m-row">11,600</div><div class="m-row">30,734</div><div class="m-row">42,950</div><div class="m-row">45,992</div><div class="m-row">76,425</div><div class="m-row">3,988</div><div class="m-row">7,284</div><div class="m-row">57,870</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">276,843</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">19</div>
+                <div class="mitori-body"><div class="m-row">88,758</div><div class="m-row">8,242</div><div class="m-row">-64,197</div><div class="m-row">49,611</div><div class="m-row">-7,226</div><div class="m-row">92,548</div><div class="m-row">-87,215</div><div class="m-row">48,170</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">128,691</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">20</div>
+                <div class="mitori-body"><div class="m-row">199,537</div><div class="m-row">8,751</div><div class="m-row">8,465</div><div class="m-row">6,405</div><div class="m-row">18,897</div><div class="m-row">38,852</div><div class="m-row">248,284</div><div class="m-row">5,849</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">535,040</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">21</div>
+                <div class="mitori-body"><div class="m-row">88,523</div><div class="m-row">25,207</div><div class="m-row">-85,452</div><div class="m-row">-58,963</div><div class="m-row">-1,448</div><div class="m-row">9,587</div><div class="m-row">18,828</div><div class="m-row">99,875</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">96,157</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">22</div>
+                <div class="mitori-body"><div class="m-row">46,224</div><div class="m-row">9,982</div><div class="m-row">59,880</div><div class="m-row">2,777</div><div class="m-row">720,503</div><div class="m-row">1,969</div><div class="m-row">667,897</div><div class="m-row">9,734</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">1,518,966</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">23</div>
+                <div class="mitori-body"><div class="m-row">12,548</div><div class="m-row">82,804</div><div class="m-row">52,261</div><div class="m-row">81,660</div><div class="m-row">43,569</div><div class="m-row">69,763</div><div class="m-row">3,249</div><div class="m-row">1,346</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">347,200</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">24</div>
+                <div class="mitori-body"><div class="m-row">98,196</div><div class="m-row">75,583</div><div class="m-row">37,170</div><div class="m-row">74,489</div><div class="m-row">32,770</div><div class="m-row">1,848</div><div class="m-row">60,392</div><div class="m-row">8,090</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">388,538</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">25</div>
+                <div class="mitori-body"><div class="m-row">77,680</div><div class="m-row">18,877</div><div class="m-row">-3,057</div><div class="m-row">40,184</div><div class="m-row">66,691</div><div class="m-row">-38,056</div><div class="m-row">-94,536</div><div class="m-row">8,525</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">76,308</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">26</div>
+                <div class="mitori-body"><div class="m-row">2,600</div><div class="m-row">-27,241</div><div class="m-row">11,149</div><div class="m-row">64,912</div><div class="m-row">78,650</div><div class="m-row">73,384</div><div class="m-row">-13,148</div><div class="m-row">-1,183</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">189,123</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">27</div>
+                <div class="mitori-body"><div class="m-row">46,077</div><div class="m-row">85,060</div><div class="m-row">8,910</div><div class="m-row">95,922</div><div class="m-row">97,273</div><div class="m-row">92,579</div><div class="m-row">2,165</div><div class="m-row">29,999</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">457,985</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">28</div>
+                <div class="mitori-body"><div class="m-row">47,116</div><div class="m-row">1,831</div><div class="m-row">46,778</div><div class="m-row">-4,174</div><div class="m-row">-48,117</div><div class="m-row">73,023</div><div class="m-row">-48,798</div><div class="m-row">55,023</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">122,682</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">29</div>
+                <div class="mitori-body"><div class="m-row">337,784</div><div class="m-row">6,849</div><div class="m-row">305,338</div><div class="m-row">24,095</div><div class="m-row">8,785</div><div class="m-row">6,942</div><div class="m-row">7,653</div><div class="m-row">77,832</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">775,278</span>
+                </div>
+            </div>
+        
+            <div class="mitori-box">
+                <div class="mitori-idx">30</div>
+                <div class="mitori-body"><div class="m-row">279,797</div><div class="m-row">4,726</div><div class="m-row">2,689</div><div class="m-row">439,356</div><div class="m-row">32,712</div><div class="m-row">7,304</div><div class="m-row">6,999</div><div class="m-row">74,998</div></div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">848,581</span>
+                </div>
+            </div>
+        </div>
+</div>
+
+<div class="sheet">
+    <h1>全珠連練馬地区珠算競技大会</h1>
+    <div class="sub-header">種目：暗算　(制限時間 1分30秒)</div>
+    <div id="anzan-area">
+            <div class="anzan-box">
+                <div class="anzan-idx">1</div>
+                <div class="anzan-body"><div class="anzan-row">133</div><div class="anzan-row">66</div><div class="anzan-row">883</div><div class="anzan-row">33</div><div class="anzan-row">16</div><div class="anzan-row">61</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">1,192</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">2</div>
+                <div class="anzan-body"><div class="anzan-row">67</div><div class="anzan-row">94</div><div class="anzan-row">51</div><div class="anzan-row">108</div><div class="anzan-row">55</div><div class="anzan-row">394</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">769</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">3</div>
+                <div class="anzan-body"><div class="anzan-row">75</div><div class="anzan-row">596</div><div class="anzan-row">-354</div><div class="anzan-row">60</div><div class="anzan-row">-28</div><div class="anzan-row">16</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">365</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">4</div>
+                <div class="anzan-body"><div class="anzan-row">549</div><div class="anzan-row">61</div><div class="anzan-row">29</div><div class="anzan-row">18</div><div class="anzan-row">658</div><div class="anzan-row">75</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">1,390</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">5</div>
+                <div class="anzan-body"><div class="anzan-row">78</div><div class="anzan-row">690</div><div class="anzan-row">87</div><div class="anzan-row">85</div><div class="anzan-row">15</div><div class="anzan-row">688</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">1,643</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">6</div>
+                <div class="anzan-body"><div class="anzan-row">48</div><div class="anzan-row">159</div><div class="anzan-row">26</div><div class="anzan-row">66</div><div class="anzan-row">92</div><div class="anzan-row">391</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">782</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">7</div>
+                <div class="anzan-body"><div class="anzan-row">92</div><div class="anzan-row">-300</div><div class="anzan-row">29</div><div class="anzan-row">77</div><div class="anzan-row">576</div><div class="anzan-row">-86</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">388</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">8</div>
+                <div class="anzan-body"><div class="anzan-row">-407</div><div class="anzan-row">73</div><div class="anzan-row">34</div><div class="anzan-row">35</div><div class="anzan-row">538</div><div class="anzan-row">-98</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">175</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">9</div>
+                <div class="anzan-body"><div class="anzan-row">91</div><div class="anzan-row">84</div><div class="anzan-row">-579</div><div class="anzan-row">91</div><div class="anzan-row">-48</div><div class="anzan-row">497</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">136</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">10</div>
+                <div class="anzan-body"><div class="anzan-row">94</div><div class="anzan-row">716</div><div class="anzan-row">79</div><div class="anzan-row">699</div><div class="anzan-row">32</div><div class="anzan-row">78</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">1,698</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">11</div>
+                <div class="anzan-body"><div class="anzan-row">926</div><div class="anzan-row">-95</div><div class="anzan-row">11</div><div class="anzan-row">-359</div><div class="anzan-row">13</div><div class="anzan-row">91</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">587</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">12</div>
+                <div class="anzan-body"><div class="anzan-row">983</div><div class="anzan-row">959</div><div class="anzan-row">27</div><div class="anzan-row">74</div><div class="anzan-row">18</div><div class="anzan-row">31</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">2,092</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">13</div>
+                <div class="anzan-body"><div class="anzan-row">955</div><div class="anzan-row">-142</div><div class="anzan-row">23</div><div class="anzan-row">28</div><div class="anzan-row">-74</div><div class="anzan-row">76</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">866</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">14</div>
+                <div class="anzan-body"><div class="anzan-row">55</div><div class="anzan-row">11</div><div class="anzan-row">463</div><div class="anzan-row">57</div><div class="anzan-row">929</div><div class="anzan-row">63</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">1,578</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">15</div>
+                <div class="anzan-body"><div class="anzan-row">65</div><div class="anzan-row">-326</div><div class="anzan-row">-40</div><div class="anzan-row">332</div><div class="anzan-row">59</div><div class="anzan-row">30</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">120</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">16</div>
+                <div class="anzan-body"><div class="anzan-row">23</div><div class="anzan-row">587</div><div class="anzan-row">596</div><div class="anzan-row">15</div><div class="anzan-row">28</div><div class="anzan-row">84</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">1,333</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">17</div>
+                <div class="anzan-body"><div class="anzan-row">96</div><div class="anzan-row">67</div><div class="anzan-row">97</div><div class="anzan-row">317</div><div class="anzan-row">810</div><div class="anzan-row">32</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">1,419</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">18</div>
+                <div class="anzan-body"><div class="anzan-row">-11</div><div class="anzan-row">-641</div><div class="anzan-row">53</div><div class="anzan-row">717</div><div class="anzan-row">13</div><div class="anzan-row">93</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">224</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">19</div>
+                <div class="anzan-body"><div class="anzan-row">72</div><div class="anzan-row">829</div><div class="anzan-row">41</div><div class="anzan-row">15</div><div class="anzan-row">223</div><div class="anzan-row">92</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">1,272</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">20</div>
+                <div class="anzan-body"><div class="anzan-row">55</div><div class="anzan-row">-723</div><div class="anzan-row">10</div><div class="anzan-row">-63</div><div class="anzan-row">754</div><div class="anzan-row">80</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">113</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">21</div>
+                <div class="anzan-body"><div class="anzan-row">96</div><div class="anzan-row">344</div><div class="anzan-row">-461</div><div class="anzan-row">76</div><div class="anzan-row">66</div><div class="anzan-row">-26</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">95</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">22</div>
+                <div class="anzan-body"><div class="anzan-row">69</div><div class="anzan-row">942</div><div class="anzan-row">30</div><div class="anzan-row">66</div><div class="anzan-row">63</div><div class="anzan-row">195</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">1,365</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">23</div>
+                <div class="anzan-body"><div class="anzan-row">77</div><div class="anzan-row">81</div><div class="anzan-row">689</div><div class="anzan-row">91</div><div class="anzan-row">915</div><div class="anzan-row">53</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">1,906</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">24</div>
+                <div class="anzan-body"><div class="anzan-row">24</div><div class="anzan-row">538</div><div class="anzan-row">97</div><div class="anzan-row">-71</div><div class="anzan-row">-419</div><div class="anzan-row">38</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">207</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">25</div>
+                <div class="anzan-body"><div class="anzan-row">378</div><div class="anzan-row">68</div><div class="anzan-row">906</div><div class="anzan-row">38</div><div class="anzan-row">72</div><div class="anzan-row">50</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">1,512</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">26</div>
+                <div class="anzan-body"><div class="anzan-row">15</div><div class="anzan-row">10</div><div class="anzan-row">168</div><div class="anzan-row">58</div><div class="anzan-row">402</div><div class="anzan-row">62</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">715</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">27</div>
+                <div class="anzan-body"><div class="anzan-row">899</div><div class="anzan-row">902</div><div class="anzan-row">82</div><div class="anzan-row">63</div><div class="anzan-row">47</div><div class="anzan-row">15</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">2,008</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">28</div>
+                <div class="anzan-body"><div class="anzan-row">-506</div><div class="anzan-row">611</div><div class="anzan-row">-42</div><div class="anzan-row">46</div><div class="anzan-row">13</div><div class="anzan-row">98</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">220</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">29</div>
+                <div class="anzan-body"><div class="anzan-row">346</div><div class="anzan-row">957</div><div class="anzan-row">53</div><div class="anzan-row">66</div><div class="anzan-row">98</div><div class="anzan-row">42</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">1,562</span>
+                </div>
+            </div>
+        
+            <div class="anzan-box">
+                <div class="anzan-idx">30</div>
+                <div class="anzan-body"><div class="anzan-row">11</div><div class="anzan-row">58</div><div class="anzan-row">623</div><div class="anzan-row">-50</div><div class="anzan-row">-123</div><div class="anzan-row">67</div></div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">586</span>
+                </div>
+            </div>
+        </div>
+    
+    <div class="score-box">
+        <table class="score-table">
+            <tbody><tr>
+                <th>かけ算</th><th>わり算</th><th>みとり算</th><th>暗　算</th><th class="score-total">合　計</th>
+            </tr>
+            <tr>
+                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td class="score-total">&nbsp;</td>
+            </tr>
+        </tbody></table>
+    </div>
+</div>
+
+<div class="sheet">
+    <h1>全珠連練馬地区珠算競技大会</h1>
+    <div class="sub-header">解　答　表</div>
+    <div class="answer-sheet-container" id="answer-sheet-content"><table class="master-ans-table"><thead><tr><th class="col-idx">No.</th><th>かけ算</th><th>わり算</th><th>みとり算</th><th>暗　算</th></tr></thead><tbody><tr><td class="col-idx"><strong>1</strong></td><td>34,061,555</td><td>1.1</td><td>1,254,833</td><td>1,192</td></tr><tr><td class="col-idx"><strong>2</strong></td><td>53,069,744</td><td>0.092</td><td>99,544</td><td>769</td></tr><tr><td class="col-idx"><strong>3</strong></td><td>44,541,266</td><td>2.85</td><td>386,579</td><td>365</td></tr><tr><td class="col-idx"><strong>4</strong></td><td>26,375,874</td><td>53,886</td><td>551,134</td><td>1,390</td></tr><tr><td class="col-idx"><strong>5</strong></td><td>435.402</td><td>5,190.9</td><td>609,018</td><td>1,643</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>6</strong></td><td>729.341</td><td>689</td><td>-380,080</td><td>782</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>7</strong></td><td>34,316,163</td><td>26,926</td><td>126,630</td><td>388</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>8</strong></td><td>527.77</td><td>7.89</td><td>285,837</td><td>175</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>9</strong></td><td>16,402,797</td><td>33</td><td>-1,276,458</td><td>136</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>10</strong></td><td>189.214</td><td>5,434.6</td><td>280,155</td><td>1,698</td></tr><tr><td class="col-idx"><strong>11</strong></td><td>35,911,296</td><td>414</td><td>332,388</td><td>587</td></tr><tr><td class="col-idx"><strong>12</strong></td><td>26,954.795</td><td>0.304</td><td>281,665</td><td>2,092</td></tr><tr><td class="col-idx"><strong>13</strong></td><td>687.879</td><td>39.7</td><td>1,707,019</td><td>866</td></tr><tr><td class="col-idx"><strong>14</strong></td><td>61.303</td><td>12.737</td><td>348,515</td><td>1,578</td></tr><tr><td class="col-idx"><strong>15</strong></td><td>10,899.867</td><td>53.6</td><td>1,332,421</td><td>120</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>16</strong></td><td>68,831,424</td><td>53</td><td>1,940,523</td><td>1,333</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>17</strong></td><td>69,376,473</td><td>13</td><td>1,044,172</td><td>1,419</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>18</strong></td><td>2,935</td><td>896</td><td>276,843</td><td>224</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>19</strong></td><td>89,197,504</td><td>216</td><td>128,691</td><td>1,272</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>20</strong></td><td>36,510,204</td><td>37</td><td>535,040</td><td>113</td></tr><tr><td class="col-idx"><strong>21</strong></td><td>9,661,286</td><td>12</td><td>96,157</td><td>95</td></tr><tr><td class="col-idx"><strong>22</strong></td><td>4,235,192</td><td>11</td><td>1,518,966</td><td>1,365</td></tr><tr><td class="col-idx"><strong>23</strong></td><td>32,184,999</td><td>49,638</td><td>347,200</td><td>1,906</td></tr><tr><td class="col-idx"><strong>24</strong></td><td>5,184,706</td><td>7,943</td><td>388,538</td><td>207</td></tr><tr><td class="col-idx"><strong>25</strong></td><td>368</td><td>46</td><td>76,308</td><td>1,512</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>26</strong></td><td>57,644,488</td><td>953</td><td>189,123</td><td>715</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>27</strong></td><td>10,673,364</td><td>462</td><td>457,985</td><td>2,008</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>28</strong></td><td>559</td><td>773</td><td>122,682</td><td>220</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>29</strong></td><td>38,486,774</td><td>74</td><td>775,278</td><td>1,562</td></tr><tr style="background:#fafafa;"><td class="col-idx"><strong>30</strong></td><td>73,132,444</td><td>21,588</td><td>848,581</td><td>586</td></tr></tbody></table></div>
+</div>
+
+<script>
+    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    
+    const fmt = (val) => {
+        let n = parseFloat(val); 
+        let str = String(n);
+        if (str.includes('e')) {
+            str = n.toFixed(10).replace(/0+$/, '').replace(/\.$/, '');
+        }
+        let parts = str.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return parts.join('.');
+    };
+
+    let allAnswers = { kake: [], wari: [], mitori: [], anzan: [] };
+
+    function createRow(idx, text, ans) {
+        return `
+            <div class="calc-row">
+                <div class="idx">${idx}</div>
+                <div class="prob">
+                    <span class="prob-num">${text}</span>
+                    <span class="symbol">=</span>
+                </div>
+                <div class="ans-space">
+                    <span class="hidden-ans">${fmt(ans)}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function createMitoriBox(idx, nums, total) {
+        let rowsHtml = nums.map(n => {
+            return `<div class="m-row">${fmt(n)}</div>`;
+        }).join('');
+        return `
+            <div class="mitori-box">
+                <div class="mitori-idx">${idx}</div>
+                <div class="mitori-body">${rowsHtml}</div>
+                <div class="m-ans-area">
+                    <span class="hidden-ans">${fmt(total)}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function createAnzanBox(idx, nums, total) {
+        let rowsHtml = nums.map(n => {
+            return `<div class="anzan-row">${fmt(n)}</div>`;
+        }).join('');
+        return `
+            <div class="anzan-box">
+                <div class="anzan-idx">${idx}</div>
+                <div class="anzan-body">${rowsHtml}</div>
+                <div class="anzan-ans">
+                    <span class="hidden-ans">${fmt(total)}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function genSigIntNoTailZero(digits) {
+        let min = Math.pow(10, digits - 1);
+        let max = Math.pow(10, digits) - 1;
+        let val;
+        for (let k=0; k<100; k++) {
+            val = rand(min, max);
+            if (val % 10 !== 0) return val;
+        }
+        return min + 1; 
+    }
+
+    function genNumForKake(digits, isDecimal) {
+        if (!isDecimal) {
+            return genSigIntNoTailZero(digits);
+        } else {
+            let strVal = "0.";
+            for (let i = 0; i < digits - 1; i++) { strVal += rand(0, 9); }
+            strVal += rand(1, 9);
+            return parseFloat(strVal);
+        }
+    }
+
+    function countSigFigs(num) {
+        let s = parseFloat(num).toString();
+        if (s.includes('e')) return 99; 
+        s = s.replace('.', '').replace('-', '');
+        s = s.replace(/^0+/, ''); 
+        return s.length;
+    }
+
+    // =========================================
+    // 1. かけ算
+    // =========================================
+    function genKake() {
+        const L = document.getElementById('kake-left');
+        const R = document.getElementById('kake-right');
+        L.innerHTML = '<div class="rule-header">小数第3未満位四捨五入</div>'; 
+        R.innerHTML = '<div class="rule-header">整数位未満四捨五入</div>';
+        allAnswers.kake = [];
+        
+        const patterns = [[4, 4], [3, 5], [5, 3]];
+
+        for (let i = 1; i <= 30; i++) {
+            let p = patterns[Math.floor(Math.random() * patterns.length)];
+            let digitA = p[0], digitB = p[1];
+            let a, b, finalAns;
+            let retryCount = 0;
+
+            while (true) {
+                if (retryCount > 100) {
+                    a = genNumForKake(digitA, false);
+                    b = genNumForKake(digitB, false);
+                    let raw = a * b;
+                    finalAns = (i <= 15) ? (Math.round(raw * 1000) / 1000) : Math.round(raw);
+                    break;
+                }
+                retryCount++;
+
+                if (Math.random() < 0.45) {
+                    a = genNumForKake(digitA, false);
+                    b = genNumForKake(digitB, false);
+                } else {
+                    let r = Math.random();
+                    if (r < 0.33)      { a = genNumForKake(digitA, true);  b = genNumForKake(digitB, false); }
+                    else if (r < 0.66) { a = genNumForKake(digitA, false); b = genNumForKake(digitB, true);  }
+                    else               { a = genNumForKake(digitA, true);  b = genNumForKake(digitB, true);  }
+                }
+                let rawAns = a * b;
+                finalAns = (i <= 15) ? Math.round(rawAns * 1000) / 1000 : Math.round(rawAns);
+                if (finalAns !== 0 && Math.abs(finalAns) >= 10) break;
+            }
+            allAnswers.kake.push(finalAns);
+            let html = createRow(i, `${fmt(a)} <span class="symbol">×</span> ${fmt(b)}`, finalAns);
+            (i <= 15) ? L.innerHTML += html : R.innerHTML += html;
+        }
+    }
+
+    // =========================================
+    // 2. わり算
+    // =========================================
+    function genWari() {
+        const L = document.getElementById('wari-left');
+        const R = document.getElementById('wari-right');
+        L.innerHTML = '<div class="rule-header">小数第3位未満四捨五入</div>'; 
+        R.innerHTML = '<div class="rule-header">整数位未満四捨五入</div>';
+        allAnswers.wari = [];
+        
+        const wariPatterns = [[2, 5], [3, 4], [4, 3], [5, 2]];
+
+        let rightIndices = [];
+        for(let k=16; k<=30; k++) rightIndices.push(k);
+        for(let k = rightIndices.length - 1; k > 0; k--){
+            const j = Math.floor(Math.random() * (k + 1));
+            [rightIndices[k], rightIndices[j]] = [rightIndices[j], rightIndices[k]];
+        }
+        let specialIndices = rightIndices.slice(0, 2); 
+
+        for (let i = 1; i <= 30; i++) {
+            let div, dvr, finalAns;
+            let retryCount = 0;
+            
+            let forceSmallAns    = (i <= 15 && Math.random() < 0.1); 
+            let forceIntegerDivLeft = (i <= 15 && !forceSmallAns && Math.random() < 0.3);
+
+            while (true) {
+                if (retryCount > 100) {
+                    let q = genSigIntNoTailZero(3), d = genSigIntNoTailZero(4);
+                    div = q * d; dvr = d; finalAns = q;
+                    break;
+                }
+                retryCount++;
+
+                let pat = wariPatterns[Math.floor(Math.random() * wariPatterns.length)];
+                let dvrDigits = pat[0], ansDigits = pat[1];
+
+                if (i <= 15) {
+                    let baseDvr = genSigIntNoTailZero(dvrDigits);
+                    let baseQ   = genSigIntNoTailZero(ansDigits);
+                    let toDec = (num, digs) => parseFloat((num / Math.pow(10, rand(1, digs + 1))).toPrecision(digs));
+
+                    if (forceSmallAns) {
+                        let dvrVal = (Math.random() < 0.5) ? toDec(baseDvr, dvrDigits) : baseDvr;
+                        let realQ  = baseQ / Math.pow(10, ansDigits + rand(1,3) - 1);
+                        while(realQ >= 1) realQ /= 10;
+                        div = parseFloat((realQ * dvrVal).toPrecision(7));
+                        dvr = dvrVal;
+                        finalAns = Math.round(realQ * 1000) / 1000;
+                    } else if (forceIntegerDivLeft) {
+                        div = baseQ * baseDvr; dvr = baseDvr; finalAns = baseQ;
+                    } else {
+                        let dvrVal = toDec(baseDvr, dvrDigits);
+                        let qVal   = toDec(baseQ, ansDigits);
+                        div = parseFloat((qVal * dvrVal).toPrecision(7));
+                        dvr = dvrVal;
+                        finalAns = Math.round((div / dvr) * 1000) / 1000;
+                        if (Math.abs(finalAns) < 1) continue;
+                    }
+                } else {
+                    let isSpecial = specialIndices.includes(i);
+                    let typeRand  = Math.random();
+                    let isDecDec  = (typeRand < 0.4);
+                    let isIntInt  = (!isSpecial && !isDecDec && typeRand < 0.6);
+                    let q = genSigIntNoTailZero(ansDigits);
+                    let d = genSigIntNoTailZero(dvrDigits);
+
+                    if (isSpecial) {
+                        let shift  = 3;
+                        let dvrVal = d / Math.pow(10, shift);
+                        div = parseFloat((q * dvrVal).toPrecision(3));
+                        dvr = dvrVal;
+                        finalAns = Math.round(div / dvr);
+                        if (countSigFigs(div) !== 3) continue;
+                    } else if (isDecDec) {
+                        let shift  = rand(1, 2);
+                        let dvrVal = d / Math.pow(10, shift);
+                        div = parseFloat((q * dvrVal).toPrecision(7));
+                        dvr = dvrVal;
+                        finalAns = q;
+                        if (Number.isInteger(div) || Number.isInteger(dvr)) continue;
+                    } else if (isIntInt) {
+                        div = q * d; dvr = d; finalAns = q;
+                    } else {
+                        let shift  = Math.random() < 0.5 ? 1 : 0;
+                        let dvrVal = d / Math.pow(10, shift);
+                        div = parseFloat((q * dvrVal).toPrecision(7));
+                        dvr = dvrVal;
+                        finalAns = Math.round(div / dvr);
+                    }
+                }
+
+                if (countSigFigs(div) > 7) continue;
+                if (Math.abs(div) < 0.0001 && div !== 0) continue;
+                if (fmt(div).endsWith("0") && !fmt(div).includes(".")) continue;
+                if (finalAns !== 0 && dvr !== 0 && isFinite(div/dvr)) {
+                    if (Math.abs(dvr) < 0.001) continue;
+                    if (i > 15 && Math.abs(finalAns) < 10) continue;
+                    break;
+                }
+            }
+            allAnswers.wari.push(finalAns);
+            let html = createRow(i, `${fmt(div)} <span class="symbol">÷</span> ${fmt(dvr)}`, finalAns);
+            (i <= 15) ? L.innerHTML += html : R.innerHTML += html;
+        }
+    }
+
+    // =========================================
+    // 3. みとり算
+    // =========================================
+    function genMitori() {
+        const area = document.getElementById('mitori-area');
+        area.innerHTML = '';
+        allAnswers.mitori = [];
+        let rowCount = 8; 
+
+        const patA = [4,4,4,4, 5,5, 6,6];
+        const patB = [5,5,5,5,5,5, 4,4];
+
+        let negativeAnsCountTarget = rand(2, 3);
+        let negativeAnsCount = 0;
+
+        for (let i = 1; i <= 30; i++) {
+            let nums = [], total = 0;
+            let retryCount = 0;
+            
+            let isNegativeAns = false;
+            if (negativeAnsCount < negativeAnsCountTarget) {
+                let remaining = 30 - i + 1;
+                let needed = negativeAnsCountTarget - negativeAnsCount;
+                if (Math.random() < (needed / remaining)) isNegativeAns = true;
+            }
+
+            while(true) {
+                if (retryCount > 100) break;
+                retryCount++;
+
+                nums = []; total = 0;
+                let isPatA = (Math.random() < 0.5);
+                let digitsPattern = isPatA ? [...patA] : [...patB];
+                for (let k = digitsPattern.length - 1; k > 0; k--) {
+                    const j = Math.floor(Math.random() * (k + 1));
+                    [digitsPattern[k], digitsPattern[j]] = [digitsPattern[j], digitsPattern[k]];
+                }
+
+                let isSubtraction = isNegativeAns || (Math.random() < 0.4);
+                let signs = Array(8).fill(1);
+
+                if (isSubtraction) {
+                    let negIndices = [];
+                    if (isPatA) {
+                        let idx6 = digitsPattern.map((d, idx) => d === 6 ? idx : -1).filter(idx => idx !== -1);
+                        let p1 = (idx6.length > 0) ? idx6[Math.floor(Math.random() * idx6.length)] : 0;
+                        negIndices.push(p1);
+                        let candidates = [0,1,2,3,4,5,6,7].filter(x => x !== p1);
+                        for (let k = candidates.length - 1; k > 0; k--) {
+                            const j = Math.floor(Math.random() * (k + 1));
+                            [candidates[k], candidates[j]] = [candidates[j], candidates[k]];
+                        }
+                        negIndices.push(candidates[0], candidates[1]);
+                    } else {
+                        let idx5 = digitsPattern.map((d, idx) => d === 5 ? idx : -1).filter(idx => idx !== -1);
+                        let idx4 = digitsPattern.map((d, idx) => d === 4 ? idx : -1).filter(idx => idx !== -1);
+                        if(idx5.length < 2) idx5 = [0,1,2,3,4,5];
+                        if(idx4.length < 1) idx4 = [6,7];
+                        for (let k = idx5.length - 1; k > 0; k--) {
+                            const j = Math.floor(Math.random() * (k + 1));
+                            [idx5[k], idx5[j]] = [idx5[j], idx5[k]];
+                        }
+                        negIndices.push(idx5[0], idx5[1]);
+                        negIndices.push(idx4[Math.floor(Math.random() * idx4.length)]);
+                    }
+                    negIndices.forEach(idx => signs[idx] = -1);
+                }
+
+                for (let r = 0; r < rowCount; r++) {
+                    let d = digitsPattern[r];
+                    let val = rand(Math.pow(10, d-1), Math.pow(10, d)-1) * signs[r];
+                    nums.push(val); total += val;
+                }
+
+                if (isNegativeAns) { if (total < 0) break; }
+                else               { if (total >= 10) break; }
+            }
+            if (total < 0) negativeAnsCount++;
+            allAnswers.mitori.push(total);
+            area.innerHTML += createMitoriBox(i, nums, total);
+        }
+    }
+
+    // =========================================
+    // 4. 暗算
+    // =========================================
+    function genAnzan() {
+        const area = document.getElementById('anzan-area');
+        area.innerHTML = '';
+        allAnswers.anzan = [];
+        
+        let rowCount = 6;
+        const basePattern = [2, 2, 2, 2, 3, 3];
+
+        for (let i = 1; i <= 30; i++) {
+            let nums = [], total = 0, retryCount = 0;
+            
+            while(true) {
+                if (retryCount > 100) break;
+                retryCount++;
+
+                nums = []; total = 0;
+                let digitsPattern = [...basePattern];
+                for (let k = digitsPattern.length - 1; k > 0; k--) {
+                    const j = Math.floor(Math.random() * (k + 1));
+                    [digitsPattern[k], digitsPattern[j]] = [digitsPattern[j], digitsPattern[k]];
+                }
+
+                let signs = Array(6).fill(1);
+                if (Math.random() < 0.4) {
+                    let idx2 = digitsPattern.map((d, idx) => d === 2 ? idx : -1).filter(idx => idx !== -1);
+                    let idx3 = digitsPattern.map((d, idx) => d === 3 ? idx : -1).filter(idx => idx !== -1);
+                    signs[idx2[Math.floor(Math.random() * idx2.length)]] = -1;
+                    signs[idx3[Math.floor(Math.random() * idx3.length)]] = -1;
+                }
+
+                for (let r = 0; r < rowCount; r++) {
+                    let val = rand(Math.pow(10, digitsPattern[r]-1), Math.pow(10, digitsPattern[r])-1) * signs[r];
+                    nums.push(val); total += val;
+                }
+                if (total >= 10) break;
+            }
+
+            allAnswers.anzan.push(total);
+            area.innerHTML += createAnzanBox(i, nums, total);
+        }
+    }
+
+    // =========================================
+    // 解答表
+    // =========================================
+    function renderAnswerSheet() {
+        const container = document.getElementById('answer-sheet-content');
+        let html = '<table class="master-ans-table"><thead><tr><th class="col-idx">No.</th><th>かけ算</th><th>わり算</th><th>みとり算</th><th>暗　算</th></tr></thead><tbody>';
+        for (let i = 0; i < 30; i++) {
+            let bgStyle = (Math.floor(i / 5) % 2 === 1) ? 'style="background:#fafafa;"' : '';
+            html += `<tr ${bgStyle}><td class="col-idx"><strong>${i+1}</strong></td><td>${fmt(allAnswers.kake[i])}</td><td>${fmt(allAnswers.wari[i])}</td><td>${fmt(allAnswers.mitori[i])}</td><td>${fmt(allAnswers.anzan[i])}</td></tr>`;
+        }
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    function generateAll() {
+        genKake(); genWari(); genMitori(); genAnzan(); renderAnswerSheet();
+    }
+
+    window.onload = generateAll;
+</script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+
+</body></html>
