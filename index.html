@@ -5,19 +5,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>南大泉そろばん教室 〜大会練習用〜</title>
     <style>
-        body { font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 0; line-height: 1.6; }
-        header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 40px 20px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        header h1 { margin: 0; font-size: 28px; letter-spacing: 1px; }
-        header p { margin: 10px 0 0 0; opacity: 0.9; font-size: 16px; }
-        .main-content { max-width: 900px; margin: 40px auto; padding: 0 20px; }
-        .competition-section { margin-bottom: 50px; }
-        .competition-title { font-size: 22px; border-left: 6px solid #1e40af; padding-left: 15px; margin-bottom: 20px; color: #0f172a; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
-        .card { background: white; border-radius: 12px; padding: 20px; text-decoration: none; color: inherit; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; transition: all 0.2s ease; display: flex; flex-direction: column; justify-content: center; height: 100px; text-align: center; }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #3b82f6; }
-        .card h3 { margin: 0; font-size: 18px; color: #1e40af; }
-        .card .description { font-size: 12px; color: #64748b; margin-top: 8px; }
-        .footer { text-align: center; padding: 40px; color: #94a3b8; font-size: 13px; }
+        body {
+            font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+        header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        .main-content {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .competition-section {
+            margin-bottom: 50px;
+        }
+        .competition-title {
+            font-size: 22px;
+            border-left: 6px solid #1e40af;
+            padding-left: 15px;
+            margin-bottom: 20px;
+            color: #0f172a;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100px;
+            text-align: center;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+        }
+        .card h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #1e40af;
+        }
+        .card .description {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 8px;
+        }
+        .footer {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
@@ -34,15 +102,15 @@
         <div class="grid">
             <a href="tokyo_ippan.html" class="card">
                 <h3>高校・一般の部</h3>
-                <div class="description">レベル高め</div>
+                <div class="description">最上位レベルの競技問題</div>
             </a>
             <a href="tokyo-junior.html" class="card">
                 <h3>中学生の部</h3>
-                <div class="description">coming soon…</div>
+                <div class="description">coming soon・・・</div>
             </a>
             <a href="tokyo-elementary.html" class="card">
                 <h3>小学生の部</h3>
-                <div class="description">coming soon…</div>
+                <div class="description">coming soon・・・</div>
             </a>
         </div>
     </section>
@@ -52,15 +120,33 @@
         <div class="grid">
             <a href="kanto-general.html" class="card">
                 <h3>高校・一般の部</h3>
-                <div class="description">coming soon…</div>
+                <div class="description">coming soon・・・</div>
             </a>
             <a href="kanto-junior.html" class="card">
                 <h3>中学生の部</h3>
-                <div class="description">coming soon…</div>
+                <div class="description">coming soon・・・</div>
             </a>
             <a href="kanto-elementary.html" class="card">
                 <h3>小学生の部</h3>
-                <div class="description">coming soon…</div>
+                <div class="description">coming soon・・・</div>
+            </a>
+        </div>
+    </section>
+
+    <section class="competition-section">
+        <h2 class="competition-title">🏆 全珠連練馬地区珠算競技大会</h2>
+        <div class="grid">
+            <a href="nerima-junior-high.html" class="card">
+                <h3>中・高生の部</h3>
+                <div class="description">coming soon・・・</div>
+            </a>
+            <a href="nerima-elem56.html" class="card">
+                <h3>小学5・6年の部</h3>
+                <div class="description">coming soon・・・</div>
+            </a>
+            <a href="nerima-elem4.html" class="card">
+                <h3>小学4年生以下の部</h3>
+                <div class="description">coming soon・・・</div>
             </a>
         </div>
     </section>
@@ -68,7 +154,7 @@
 </div>
 
 <div class="footer">
-    © 2026 南大泉そろばん教室 大会特訓プロジェクト
+    &copy; 2026 南大泉そろばん教室 大会特訓プロジェクト
 </div>
 
 </body>
