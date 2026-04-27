@@ -1321,7 +1321,7 @@ function generateAnzanSet(total) {
     let isSubArray = Array(total).fill(false);
     for(let i = 0; i < 8; i++) isSubArray[i] = true;
     isSubArray.sort(() => Math.random() - 0.5);
-
+ 
     let numIntermediateNeg = Math.floor(Math.random() * 2) + 1;
     let subIndices = [];
     for (let i = 0; i < total; i++) {
@@ -1329,20 +1329,21 @@ function generateAnzanSet(total) {
     }
     subIndices.sort(() => Math.random() - 0.5);
     let intermediateNegIndices = new Set(subIndices.slice(0, numIntermediateNeg));
-
+ 
     for(let i=0; i<total; i++) {
         let isSub = isSubArray[i];
         let reqInterNeg = intermediateNegIndices.has(i);
         let valid = false;
         let terms = [], totalVal = 0;
-
+ 
         while(!valid) {
-            let p3 = [randInt(100, 999), randInt(100, 999), randInt(100, 999), randInt(100, 999)];
-            let p2 = [randInt(10, 99), randInt(10, 99)];
+            // ユニーク桁制約: 各項で同じ数字が現れないようにする
+            let p3 = [generateUniqueDigitNumber(3), generateUniqueDigitNumber(3), generateUniqueDigitNumber(3), generateUniqueDigitNumber(3)];
+            let p2 = [generateUniqueDigitNumber(2), generateUniqueDigitNumber(2)];
             
             let posPool = [];
             let negPool = [];
-
+ 
             if (isSub) {
                 let neg1 = p3.pop(); 
                 let neg2 = (Math.random() < 0.5) ? p3.pop() : p2.pop(); 
@@ -1352,23 +1353,23 @@ function generateAnzanSet(total) {
                 posPool = [...p3, ...p2];
                 negPool = [];
             }
-
+ 
             let allTerms = [...posPool, ...negPool];
             let finalSum = allTerms.reduce((a, b) => a + b, 0);
-
+ 
             if (finalSum <= 0) continue;
-
+ 
             let attempts = 0;
             let found = false;
-
+ 
             while(attempts < 200) {
                 let currentTry = [...allTerms].sort(() => Math.random() - 0.5);
                 
                 if (currentTry[0] < 0) { attempts++; continue; }
-
+ 
                 let currentTotal = 0;
                 let dippedBelowZero = false;
-
+ 
                 for(let k=0; k<6; k++) {
                     currentTotal += currentTry[k];
                     if (currentTotal < 0) dippedBelowZero = true;
