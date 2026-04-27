@@ -1118,6 +1118,44 @@ function generateDivSet(total) {
 /* =========================================================================
    3. みとり算
    ========================================================================= */
+ 
+/**
+ * 見取り算の二度借り検出
+ * 各3桁ブロック(下3桁、中3桁、上3桁、最上位)を独立に下から累計し、
+ * 累計が負になって上位から1000借りる(=+1000する)操作の合計回数を返す。
+ *  - 0: 借りなし
+ *  - 1: 1回借り(普通)
+ *  - 2以上: 二度借り(△マーク対象)
+ *  - 3以上: 三度借り(★マーク対象、△を兼ねる)
+ */
+function countBorrows(terms) {
+    let totalBorrows = 0;
+    const numBlocks = 4;
+ 
+    for (let b = 0; b < numBlocks; b++) {
+        const divisor = Math.pow(1000, b);
+        const blockTerms = terms.map(t => {
+            const sign = t < 0 ? -1 : 1;
+            const absVal = Math.abs(t);
+            const block = Math.floor(absVal / divisor) % 1000;
+            return sign * block;
+        });
+ 
+        if (blockTerms.every(v => v === 0)) continue;
+ 
+        let acc = 0;
+        for (const v of blockTerms) {
+            acc += v;
+            while (acc < 0) {
+                acc += 1000;
+                totalBorrows++;
+            }
+        }
+    }
+ 
+    return totalBorrows;
+}
+ 
 function calculateFingeringCount(state, delta) {
     if (delta === 0) return 0;
     const next = state + delta;
@@ -1157,24 +1195,81 @@ function calculateTotalFingering(terms) {
     }
     return total;
 }
+/**
+ * d桁の正の整数で、各桁の数字がすべてユニーク(同じ数字が現れない)なものを生成
+ * 先頭桁は1-9、それ以外は0-9から重複なく選ぶ
+ * 例: 4桁 → 2903, 8017 など / 7桁 → 8374062 など
+ */
+function generateUniqueDigitNumber(d) {
+    if (d < 1 || d > 10) return null;
+    // 0-9をシャッフルして先頭d個を取る
+    const pool = [0,1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+    const selected = pool.slice(0, d);
+    // 先頭が0だったら、後ろの非0要素と入れ替える
+    if (selected[0] === 0) {
+        for (let i = 1; i < selected.length; i++) {
+            if (selected[i] !== 0) {
+                [selected[0], selected[i]] = [selected[i], selected[0]];
+                break;
+            }
+        }
+    }
+    return parseInt(selected.join(''));
+}
+ 
 function createSingleMitori(digitCounts, isSubtractionProblem) {
     let digits = [];
     for (const k in digitCounts) for (let i = 0; i < digitCounts[k]; i++) digits.push(parseInt(k));
     digits.sort(() => Math.random() - 0.5);
-    let terms = digits.map(d => Math.floor(Math.random() * (Math.pow(10, d) - Math.pow(10, d-1))) + Math.pow(10, d-1));
-    
+    // 各項は「同一数字が現れない」ユニーク桁の数を生成
+    let terms = digits.map(d => generateUniqueDigitNumber(d));
+ 
     if (isSubtractionProblem) {
         const subCount = Math.random() < 0.5 ? 2 : 3;
         let idxs = [1,2,3,4,5,6,7].sort(() => Math.random() - 0.5);
         for(let j=0; j<subCount; j++) terms[idxs[j]] *= -1;
     }
-    return { terms, answer: terms.reduce((a, b) => a + b, 0), totalFingering: calculateTotalFingering(terms) };
+    
+    const sum = terms.reduce((a, b) => a + b, 0);
+    return { 
+        terms, 
+        answer: sum, 
+        totalFingering: calculateTotalFingering(terms),
+        borrows: countBorrows(terms)
+    };
 }
-
+ 
+/**
+ * 借用回数 minBorrows 以上の見取り算問題を強制生成(差し替え用)
+ */
+function generateForcedBorrowProblem(minBorrows, usedKeys) {
+    let tries = 5000;
+    while (tries--) {
+        const config = Math.random() < 0.5 ? {4:2, 5:2, 6:2, 7:2} : {5:4, 6:4};
+        // 借りを発生させやすくするため減算問題で生成
+        const p = createSingleMitori(config, true);
+ 
+        if (p.answer <= 0) continue;
+        if (p.borrows < minBorrows) continue;
+ 
+        const key = JSON.stringify(p.terms);
+        if (usedKeys.has(key)) continue;
+ 
+        return p;
+    }
+    return null;
+}
+ 
+/**
+ * 見取り算20問セット生成
+ *  - 通常生成後、二度借り(borrows>=2)が0問なら1問差し替えて保証
+ *  - 三度借りは自然発生に任せる(約6%程度)
+ */
 function generateMitoriSet(total) {
     const list = [];
     const usedKeys = new Set();
     const minSub = total < 20 ? 2 : 3;
+ 
     for (let i = 0; i < total; i++) {
         const config = Math.random() < 0.5 ? {4:2, 5:2, 6:2, 7:2} : {5:4, 6:4};
         const isSub = (i < minSub) || (Math.random() < 0.4);
@@ -1186,8 +1281,33 @@ function generateMitoriSet(total) {
             tries--;
         } while (usedKeys.has(key) && tries > 0);
         usedKeys.add(key);
-        list.push({ no: i+1, terms: p.terms, answer: addCommas(p.answer), fingering: p.totalFingering });
+        list.push({ 
+            no: i+1, 
+            terms: p.terms, 
+            answer: addCommas(p.answer), 
+            fingering: p.totalFingering,
+            borrows: p.borrows
+        });
     }
+ 
+    // 二度借り保証: 0問なら1問差し替え
+    const hasDouble = list.some(p => p.borrows >= 2);
+    if (!hasDouble) {
+        const replaced = generateForcedBorrowProblem(2, usedKeys);
+        if (replaced) {
+            const targetIdx = randInt(0, total - 1);
+            usedKeys.delete(JSON.stringify(list[targetIdx].terms));
+            list[targetIdx] = {
+                no: list[targetIdx].no,
+                terms: replaced.terms,
+                answer: addCommas(replaced.answer),
+                fingering: replaced.totalFingering,
+                borrows: replaced.borrows
+            };
+            usedKeys.add(JSON.stringify(replaced.terms));
+        }
+    }
+ 
     return list;
 }
 
