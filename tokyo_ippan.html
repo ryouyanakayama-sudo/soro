@@ -560,7 +560,7 @@ function finalizeDivAnswer(rawNum, isTop) {
     return { ansStr, ansVal: rounded, isRounded };
 }
 
-function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, forceIntDiv = false, forceStar = false, forceSmallAnswer = false, forceSmallDividend = false, forceInexact = false, forceIntInexact = false, forceShortDividend = false, forceSmallDivisor = false, usedKeys = null) {
+function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, forceIntDiv = false, forceStar = false, forceSmallAnswer = false, forceSmallDividend = false, forceInexact = false, forceIntInexact = false, forceShortDividend = false, forceSmallDivisor = false, usedKeys = null, forceSmallDivisorFront = false) {
 
     for (let retry = 0; retry < 500000; retry++) {
         let dLen = Math.floor(Math.random() * 3) + 3;
@@ -712,6 +712,74 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
                 return {
                     dividend: nStr, divisor: dStr, answer: addCommas(aStr),
                     display: `<span class="abacus-font">${nStr}</span><span class="symbol-font">÷</span><span class="abacus-font">${dStr}</span>`
+                };
+            }
+
+            // forceSmallDivisorFront: 前半用「割る数が1未満（割り切れる）」
+            // 戦略: 除数を 0.xxx 形式（3〜5桁）、答えを小数第3位までの値、被除数 = 除数×答え
+            if (forceSmallDivisorFront) {
+                let dFracLen = randInt(3, 5); // 0.xxx〜0.xxxxx (有効桁3〜5)
+                let dFrac = generateNonZeroDigits(dFracLen);
+                let dStr = "0." + dFrac;
+                let valD = parseFloat(dStr);
+                let dCount = dFracLen; // getSorobanDigitsの仕様: 1未満は小数桁数
+
+                let aCount = 8 - dCount; // 商の桁数 = 3〜5
+
+                // 答えのバリエーション: 整数〜小数（小数第3位まで）
+                // 答え=valDの逆数オーダーになる: valD≒0.111〜0.99999なので答え≒1.0〜9.0+
+                // パターン1: 答えを整数(aCount桁) → 例 0.234 ÷ 答え=123 → 0.234*123=28.782（被除数小数）
+                // パターン2: 答えを小数 → 桁数調整しやすい
+
+                // ランダムに答えを生成（小数第3位以内）
+                let aBase = generateNonZeroDigits(aCount);
+                let aStr;
+                let r = Math.random();
+                if (r < 0.4) {
+                    // 整数の答え
+                    aStr = aBase;
+                } else if (r < 0.7 && aCount >= 2) {
+                    // 整数部1〜2桁＋小数部
+                    let iLen = randInt(1, Math.min(aCount - 1, 2));
+                    let fLen = aCount - iLen;
+                    if (fLen > 3) continue; // 小数第3位超過は不可
+                    aStr = aBase.slice(0, iLen) + "." + aBase.slice(iLen);
+                } else {
+                    // 0.xxx形式（aCount=3でないと小数第3位超過になるので注意）
+                    if (aCount > 3) continue;
+                    aStr = "0." + aBase;
+                }
+
+                if (aStr.includes('.') && aStr.split('.')[1].length > 3) continue;
+                let valA = parseFloat(aStr);
+                if (!isFinite(valA) || valA === 0) continue;
+                // 答えが小数第3位を超えないか再確認
+                if (needsRounding(valA, 3)) continue;
+
+                // 被除数 = 除数 × 答え（割り切れる）
+                let valN = valD * valA;
+                if (!isFinite(valN) || valN === 0) continue;
+                let nStr = parseFloat(valN.toPrecision(12)).toString();
+
+                // 被除数の表示形式チェック
+                // 内部ゼロ（123 の中の 0 など）はNGだが、0.xxx 形式はOK、
+                // また 0 から始まる小数でも内部に 0 があるのは構わない（自然な計算結果）
+                if (nStr.includes("0") && !nStr.startsWith("0.") && !nStr.startsWith("0")) continue;
+
+                // 被除数の桁数が極端でないことを確認
+                let nDigits = getSorobanDigits(nStr);
+                if (nDigits < 2 || nDigits > 8) continue;
+
+                let aCountActual = getSorobanDigits(aStr);
+                if (dCount + aCountActual !== 8) continue;
+
+                const _sdfKey = nStr + "|" + dStr;
+                if (usedKeys && usedKeys.has(_sdfKey)) continue;
+                if (usedKeys) usedKeys.add(_sdfKey);
+
+                return {
+                    dividend: nStr, divisor: dStr, answer: addCommas(aStr),
+                    display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${dStr}</span>`
                 };
             }
 
@@ -921,26 +989,26 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
             };
         }
     }
-    return generateOneDiv(isTop, forceIntAnswer, forceKampu, forceIntDiv, forceStar, forceSmallAnswer, forceSmallDividend, forceInexact, forceIntInexact, forceShortDividend, forceSmallDivisor, usedKeys);
+    return generateOneDiv(isTop, forceIntAnswer, forceKampu, forceIntDiv, forceStar, forceSmallAnswer, forceSmallDividend, forceInexact, forceIntInexact, forceShortDividend, forceSmallDivisor, usedKeys, forceSmallDivisorFront);
 }
 
 function generateDivSet(total) {
     const list = [];
 
-    const backIndices = [9,10,11,12,13,14,15,16,17,18,19].sort(() => Math.random() - 0.5);
+    // 還付トラップは後半(10-19)のみに配置（前半枠を常に10個確保するため）
+    const backIndices = [10,11,12,13,14,15,16,17,18,19].sort(() => Math.random() - 0.5);
     const kampuIndices = new Set(backIndices.slice(0, 3));
 
     const frontIndices = [0,1,2,3,4,5,6,7,8,9]
-        .filter(i => !kampuIndices.has(i))
         .sort(() => Math.random() - 0.5);
 
     let cursor = 0;
-    const intDivIndices        = new Set(frontIndices.slice(cursor, cursor += 4));
-    const smallAnswerIndices   = new Set(frontIndices.slice(cursor, cursor += 2));
-    const smallDividendIndices = new Set(frontIndices.slice(cursor, cursor += 1));
-    const frontStarIndices     = new Set(frontIndices.slice(cursor, cursor += 1));
-    const frontIntInexactIndices = new Set(frontIndices.slice(cursor, cursor += 1));
-    const frontInexactIndices  = new Set(frontIndices.slice(cursor, cursor += 1));
+    const intDivIndices        = new Set(frontIndices.slice(cursor, cursor += 2)); // ① 整数同士・割り切れる
+    const smallAnswerIndices   = new Set(frontIndices.slice(cursor, cursor += 2)); // ② 答え1未満
+    const smallDividendIndices = new Set(frontIndices.slice(cursor, cursor += 2)); // ③ 被除数1未満
+    const smallDivisorFrontIndices = new Set(frontIndices.slice(cursor, cursor += 2)); // ⑦ 割る数1未満
+    const frontStarIndices     = new Set(frontIndices.slice(cursor, cursor += 1)); // ④ ★ボーダー
+    const frontIntInexactIndices = new Set(frontIndices.slice(cursor, cursor += 1)); // ⑤ 整数÷整数割り切れない
 
     const firstHalfProblems = new Array(10).fill(null);
     const divUsedKeys = new Set();
@@ -975,8 +1043,9 @@ function generateDivSet(total) {
         firstHalfProblems[idx] = p;
     }
 
-    for (const idx of frontInexactIndices) {
-        let p = generateOneDiv(true, false, false, false, false, false, false, true, false, false, false, divUsedKeys);
+    // ⑦ 割る数が1未満（割り切れる）2問
+    for (const idx of smallDivisorFrontIndices) {
+        let p = generateOneDiv(true, false, false, false, false, false, false, false, false, false, false, divUsedKeys, true);
         p.no = idx + 1;
         firstHalfProblems[idx] = p;
     }
