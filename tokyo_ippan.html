@@ -149,8 +149,7 @@
             .sheet:last-child { page-break-after: auto; }
             .view-section { display: none !important; }
             .view-section.active { display: block !important; }
-            .diff-mark, .btn-wrong { display: none !important; }
-            .round-mark { display: inline !important; }
+            .diff-mark, .round-mark, .btn-wrong { display: none !important; }
         }
     </style>
 </head>
@@ -346,6 +345,48 @@ function createHardInteger(d) {
         if (!digits.join("").endsWith("0")) return digits.join("");
     }
 }
+
+// Aに0を最低1つ含む整数を生成（先頭・末尾は非ゼロ）
+function createIntegerWithZero(d) {
+    if (d < 3) return createHardInteger(d); // 0を入れる余地がない
+    let tries = 200;
+    while(tries--) {
+        let digits = [String(pickDigit(false))];
+        for(let i=1; i<d-1; i++) digits.push(String(pickDigit(true)));
+        digits.push(String(pickDigit(false)));
+        const s = digits.join("");
+        if (s.endsWith("0")) continue;
+        // 内部に0が1つ以上あるかチェック
+        if (s.slice(1, -1).indexOf("0") === -1) continue;
+        return s;
+    }
+    // フォールバック: 強制的に1箇所を0にする
+    let digits = [String(pickDigit(false))];
+    for(let i=1; i<d-1; i++) digits.push(String(pickDigit(true)));
+    digits.push(String(pickDigit(false)));
+    const zeroPos = randInt(1, d-2);
+    digits[zeroPos] = "0";
+    let s = digits.join("");
+    if (s.endsWith("0")) s = s.slice(0, -1) + String(pickDigit(false));
+    return s;
+}
+
+// 先頭非ゼロ・末尾非ゼロのd桁の数字列(0含み可)を生成（"0.00"の後ろに付ける用）
+function generateNonZeroFirstThenAny(d) {
+    if (d <= 0) return "";
+    let s = String(pickDigit(false));
+    for (let i = 1; i < d - 1; i++) s += String(pickDigit(true));
+    if (d >= 2) s += String(pickDigit(false));
+    return s;
+}
+// 先頭非ゼロのd桁(末尾も非ゼロ)の数字列を生成（"0."の後ろに付ける用）
+function generateLeadNonZero(d) {
+    if (d <= 0) return "";
+    let s = String(pickDigit(false));
+    for (let i = 1; i < d - 1; i++) s += String(pickDigit(true));
+    if (d >= 2) s += String(pickDigit(false));
+    return s;
+}
 function createHardDecimal(d, forceSmall = false) {
     while(true) {
         let lessThanOne = forceSmall ? true : (d <= 5 && Math.random() < 0.03);
@@ -383,7 +424,7 @@ function formatAnswer(num, decimals) {
     return addCommas(iStr) + "." + dStr;
 }
 
-function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, forceBothSmall = false, forceBorder = false) {
+function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, forceBothSmall = false, forceBorder = false, opts = {}) {
     const decimals = isTop ? 3 : 0;
 
     if (forceBothSmall) {
@@ -422,19 +463,31 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
         };
     }
 
-    const reqBorder = forceBorder ? true : (Math.random() < analyzedParams.borderlineProb);
-    const reqZero = forceSmallB ? false : (Math.random() < analyzedParams.internalZeroProb);
+    const reqBorder = (forceBorder && !opts.forceVerySmallB && !opts.forceSmallBOnly) ? true : (Math.random() < analyzedParams.borderlineProb && !opts.forceVerySmallB && !opts.forceSmallBOnly);
+    const reqZero = (forceSmallB || opts.forceVerySmallB) ? false : (Math.random() < analyzedParams.internalZeroProb);
+
+    let fixedType = null;
+    if (!isTop) {
+        if (forceSmallDec || opts.forceVerySmallB || opts.forceSmallBOnly) {
+            fixedType = "ID";
+        } else {
+            fixedType = (Math.random() < 0.5) ? "II" : "ID";
+        }
+    }
 
     let tries = 10000;
     while(tries--) {
-        const [dA, dB] = PATTERNS[randInt(0, 3)];
+        let dA, dB;
+        if (opts.forceVerySmallB) {
+            dA = 4; dB = 5;
+        } else {
+            [dA, dB] = PATTERNS[randInt(0, 3)];
+        }
         const useDec = (Math.random() * 100) < currentDecimalRatio;
 
         let type;
         if (!isTop) {
-            const backUseDec = Math.random() < 0.6;
-            type = (!backUseDec && !forceSmallDec) ? "II" : (forceSmallDec && Math.random() < 0.5 ? "ID" : "DD");
-            if (!backUseDec && forceSmallDec) type = "ID";
+            type = fixedType;
         } else {
             type = (!useDec && !forceSmallDec) ? "II" : (forceSmallDec && Math.random() < 0.5 ? "ID" : "DD");
             if (!useDec && forceSmallDec) type = "ID";
@@ -442,10 +495,24 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
 
         let aStr, bStr;
         if (type === "II") {
-            aStr = createHardInteger(dA); bStr = createHardInteger(dB);
+            if (opts.forceContainsZeroA && dA >= 3) {
+                aStr = createIntegerWithZero(dA);
+            } else {
+                aStr = createHardInteger(dA);
+            }
+            bStr = createHardInteger(dB);
         } else if (type === "ID") {
-            aStr = createHardInteger(dA);
-            if (forceSmallB) {
+            if (opts.forceContainsZeroA && dA >= 3) {
+                aStr = createIntegerWithZero(dA);
+            } else {
+                aStr = createHardInteger(dA);
+            }
+            if (opts.forceVerySmallB) {
+                const bDigits = generateNonZeroFirstThenAny(dB - 2);
+                bStr = "0.00" + bDigits;
+            } else if (opts.forceSmallBOnly) {
+                bStr = "0." + generateLeadNonZero(dB);
+            } else if (forceSmallB) {
                 bStr = "0.00" + createHardInteger(dB-2);
                 if (bStr.length > dB+2) bStr = bStr.substring(0, dB+2);
             } else { bStr = createHardDecimal(dB, forceSmallDec); }
@@ -461,6 +528,11 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
         if (countPatternDigitsFromString(aStr) !== dA || countPatternDigitsFromString(bStr) !== dB) continue;
         if (reqZero && !(hasInternalDoubleZero(aStr) || hasInternalDoubleZero(bStr))) continue;
 
+        if (opts.forceContainsZeroA) {
+            const aClean = aStr.replace(".", "");
+            if (aClean.slice(1, -1).indexOf("0") === -1) continue;
+        }
+
         const A = parseFloat(aStr); const B = parseFloat(bStr);
         if (!isFinite(A) || !isFinite(B) || A === 0 || B === 0) continue;
         const prod = A * B;
@@ -470,6 +542,7 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
         let score = calculateUnshiDifficulty(A, B);
         let th = analyzedParams.unshiThreshold;
         if (forceSmallDec || forceSmallB) th = Math.max(1, th - 1);
+        if (opts.forceVerySmallB || opts.forceSmallBOnly) th = Math.max(1, th - 2);
         if (tries < 1000) th = 1;
         if (score < th) continue;
 
@@ -477,7 +550,8 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
         if (!isFinite(rnd) || rnd === 0) continue;
         if (!isTop && Math.abs(rnd) < 1) continue;
         if (type === "II" && intDigits(rnd) !== 9) continue;
-        if (getSorobanDigits(formatAnswer(rnd, decimals)) < 4) continue;
+        const minAnsDigits = opts.forceVerySmallB ? 1 : 4;
+        if (getSorobanDigits(formatAnswer(rnd, decimals)) < minAnsDigits) continue;
 
         const mark = isBorderline(prod, decimals) ? `<span class="diff-mark">★</span>` : '';
 
@@ -487,7 +561,7 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
             answer: formatAnswer(rnd, decimals)
         };
     }
-    return generateMulProblem(isTop, forceSmallB, forceSmallDec, false, forceBorder);
+    return generateMulProblem(isTop, forceSmallB, forceSmallDec, false, forceBorder, opts);
 }
 
 function generateMulSet(total) {
@@ -503,22 +577,49 @@ function generateMulSet(total) {
         .sort(() => Math.random() - 0.5);
     const bothSmallIdx = frontNonStar[0] ?? 0;
 
-    const mulUsedKeys = new Set();
+    const backNonStar = Array.from({length: total - half}, (_, i) => i + half)
+        .filter(i => !starIndices.has(i))
+        .sort(() => Math.random() - 0.5);
 
-    const ps = generateMulProblem(true, false, false, true, false, mulUsedKeys);
+    const verySmallBIdx   = backNonStar[0];
+    const smallBIdx       = backNonStar[1];
+    const containsZeroAIdx = backNonStar[2];
+
+    const ps = generateMulProblem(true, false, false, true, false);
     list[bothSmallIdx] = { no: bothSmallIdx + 1, ...ps };
 
     for (const idx of starIndices) {
         const isTop = idx < half;
-        const p = generateMulProblem(isTop, false, false, false, true, mulUsedKeys);
+        const p = generateMulProblem(isTop, false, false, false, true);
         list[idx] = { no: idx + 1, ...p };
+    }
+
+    if (verySmallBIdx !== undefined && list[verySmallBIdx] === null) {
+        const p = generateMulProblem(false, false, false, false, false, {
+            forceVerySmallB: true
+        });
+        list[verySmallBIdx] = { no: verySmallBIdx + 1, ...p };
+    }
+
+    if (smallBIdx !== undefined && list[smallBIdx] === null) {
+        const p = generateMulProblem(false, false, false, false, false, {
+            forceSmallBOnly: true
+        });
+        list[smallBIdx] = { no: smallBIdx + 1, ...p };
+    }
+
+    if (containsZeroAIdx !== undefined && list[containsZeroAIdx] === null) {
+        const p = generateMulProblem(false, false, false, false, false, {
+            forceContainsZeroA: true
+        });
+        list[containsZeroAIdx] = { no: containsZeroAIdx + 1, ...p };
     }
 
     for (let i = 0; i < total; i++) {
         if (list[i] !== null) continue;
         const isTop = i < half;
         const forceSmall = ((i + 1) % 10 === 0);
-        const p = generateMulProblem(isTop, false, forceSmall, false, false, mulUsedKeys);
+        const p = generateMulProblem(isTop, false, forceSmall, false, false);
         list[i] = { no: i+1, ...p };
     }
 
@@ -542,13 +643,6 @@ const makeNumber = (digits, isDecimal) => {
     return digits.slice(0, pos) + "." + digits.slice(pos);
 };
 
-/**
- * 除算問題の答えを「正しい有効精度」に整える
- * - 前半(isTop=true): 小数第3位まで。それ以下が残るなら四捨五入＋●マーク
- * - 後半(isTop=false): 整数のみ。小数があるなら四捨五入＋●マーク
- *
- * 戻り値: { ansStr, ansVal, isRounded } または null（妥当な答えにできない場合）
- */
 function finalizeDivAnswer(rawNum, isTop) {
     if (!isFinite(rawNum) || rawNum === 0) return null;
     const decimals = isTop ? 3 : 0;
@@ -560,21 +654,29 @@ function finalizeDivAnswer(rawNum, isTop) {
     return { ansStr, ansVal: rounded, isRounded };
 }
 
-function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, forceIntDiv = false, forceStar = false, forceSmallAnswer = false, forceSmallDividend = false, forceInexact = false, forceIntInexact = false, forceShortDividend = false, forceSmallDivisor = false, usedKeys = null, forceSmallDivisorFront = false) {
+function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, forceIntDiv = false, forceStar = false, forceSmallAnswer = false, forceSmallDividend = false, forceInexact = false, forceIntInexact = false, forceShortDividend = false, forceSmallDivisor = false, usedKeys = null, forceSmallDivisorFront = false, forceInexactRound = false, forceADigits = 0) {
 
     for (let retry = 0; retry < 500000; retry++) {
         let dLen = Math.floor(Math.random() * 3) + 3;
         let aLen = 8 - dLen;
 
-        // --- 還付トラップ ---
+        // === 還付トラップ ===
         if (forceKampu) {
+            // 後半では aLen を forceADigits で上書き（A=被除数=商の桁数）
+            let kAlen = aLen;
+            if (!isTop && forceADigits > 0) {
+                kAlen = forceADigits;
+                if (kAlen < 3 || kAlen > 7) continue;
+                dLen = 8 - kAlen;
+                if (dLen < 1 || dLen > 5) continue;
+            }
             let dStr = generateNonZeroDigits(dLen);
             let valD = parseFloat(dStr);
 
             let q1 = randInt(1, 9);
             let q2 = randInt(1, 8);
             let qRest = "";
-            for(let j=0; j < aLen - 2; j++) qRest += String(randInt(7, 9));
+            for(let j=0; j < kAlen - 2; j++) qRest += String(randInt(7, 9));
             let aBase = String(q1) + String(q2) + qRest;
             let aStr;
 
@@ -597,25 +699,16 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
             let nDigits = getSorobanDigits(nStr);
             if (nDigits < 3 || nDigits > 8) continue;
 
-            // 桁数チェック (四捨五入後の答え桁数)
             let aCount = getSorobanDigits(aStr);
-            // 還付トラップは「割り切れる」前提なので isRounded=false
             let displayDivStr = dStr;
             let displayNStr = nStr;
             if (!isTop) {
-                let decPos = randInt(1, dStr.length - 1);
-                let dStrDec = dStr.slice(0, decPos) + "." + dStr.slice(decPos);
-                let valDDec = parseFloat(dStrDec);
-                let newN = valDDec * valA;
-                let newNStr = parseFloat(newN.toPrecision(12)).toString();
-                if (newNStr.includes("0") && !newNStr.startsWith("0.")) continue;
-                let newNDigits = getSorobanDigits(newNStr);
-                if (newNDigits < 3 || newNDigits > 10) continue;
-                let dCount = getSorobanDigits(dStrDec);
-                let aCount2 = getSorobanDigits(aStr);
-                if (dCount + aCount2 !== 8) continue;
-                displayDivStr = dStrDec;
-                displayNStr = newNStr;
+                // 後半: A=被除数=整数 を保つため、Bも整数に固定する（小数化しない）
+                // 後半の還付は「整数÷整数」の還付として動作する
+                let dCount = getSorobanDigits(dStr);
+                if (dCount + aCount !== 8) continue;
+                // A の桁数チェック (forceADigits 指定時)
+                if (forceADigits > 0 && nDigits !== forceADigits) continue;
             } else {
                 let dCount = getSorobanDigits(dStr);
                 if (dCount + aCount !== 8) continue;
@@ -627,7 +720,7 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
             };
         }
 
-        // --- 通常の生成ロジック ---
+        // === 通常の生成ロジック ===
         let dBase = generateNonZeroDigits(dLen);
 
         if (isTop) {
@@ -653,7 +746,6 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
                 let valN = parseFloat(nStr);
                 let quotient = valN / valD;
 
-                // 前半: 必ず割り切れない（小数第4位以降に数字が残る）
                 if (!needsRounding(quotient, 3)) continue;
 
                 let fin = finalizeDivAnswer(quotient, true);
@@ -677,7 +769,97 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
                 };
             }
 
+            // === 答えが1未満 + 割り切れない (●版・新規追加) ===
+            if (forceSmallAnswer && forceInexactRound) {
+                // 「整数÷整数」の見た目にならないよう、B または N の少なくとも一方を必ず小数化
+                // ランダムにどちらを小数化するか決める (両方小数もあり)
+                const r = Math.random();
+                let dIsDec, nIsDec;
+                if (r < 0.4)      { dIsDec = true;  nIsDec = false; }
+                else if (r < 0.8) { dIsDec = false; nIsDec = true;  }
+                else              { dIsDec = true;  nIsDec = true;  }
+
+                let dStr = makeNumber(dBase, dIsDec);
+                let valD = parseFloat(dStr);
+                let dCount = getSorobanDigits(dStr);
+                if (dCount < 3 || dCount > 5) continue;
+
+                let nLen = randInt(3, 8);
+                let nBase = generateNonZeroDigits(nLen);
+                let nStr = makeNumber(nBase, nIsDec);
+                if (nStr.includes("0") && !nStr.startsWith("0.")) continue;
+
+                let valN = parseFloat(nStr);
+                let quotient = valN / valD;
+
+                // 商が1未満かつ割り切れない
+                if (quotient >= 1 || quotient <= 0) continue;
+                if (!needsRounding(quotient, 3)) continue;
+
+                let fin = finalizeDivAnswer(quotient, true);
+                if (!fin) continue;
+                let ansStr = fin.ansStr;
+                if (parseFloat(ansStr) >= 1 || parseFloat(ansStr) === 0) continue;
+
+                let aCount = getSorobanDigits(ansStr);
+                if (aCount === 0) continue;
+                if (dCount + aCount !== 8) continue;
+
+                let nDigits = getSorobanDigits(nStr);
+                if (nDigits < 2 || nDigits > 8) continue;
+
+                // 念のため再確認: 整数÷整数の見た目になっていないか
+                if (!dStr.includes('.') && !nStr.includes('.')) continue;
+
+                const _key = nStr + "|" + dStr;
+                if (usedKeys && usedKeys.has(_key)) continue;
+                if (usedKeys) usedKeys.add(_key);
+
+                return {
+                    dividend: nStr, divisor: dStr, answer: addCommas(ansStr),
+                    display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span><span class="round-mark">●</span>`
+                };
+            }
+
             // forceSmallDividend: 被除数が1未満
+            // === 被除数が1未満 + 割り切れない (●版・新規追加) ===
+            if (forceSmallDividend && forceInexactRound) {
+                let nFracLen = randInt(2, 5);
+                let nFrac = generateNonZeroDigits(nFracLen);
+                let nStr = "0." + nFrac;
+                let valN = parseFloat(nStr);
+
+                let dStr = makeNumber(dBase, Math.random() < 0.5);
+                let valD = parseFloat(dStr);
+                let dCount = getSorobanDigits(dStr);
+                if (dCount < 3 || dCount > 5) continue;
+
+                let quotient = valN / valD;
+                if (!isFinite(quotient) || quotient <= 0) continue;
+                if (!needsRounding(quotient, 3)) continue;
+
+                let fin = finalizeDivAnswer(quotient, true);
+                if (!fin) continue;
+                let ansStr = fin.ansStr;
+                if (parseFloat(ansStr) === 0) continue;
+
+                let aCount = getSorobanDigits(ansStr);
+                if (aCount === 0) continue;
+                if (dCount + aCount !== 8) continue;
+
+                let nDigits = getSorobanDigits(nStr);
+                if (nDigits < 2 || nDigits > 8) continue;
+
+                const _key = nStr + "|" + dStr;
+                if (usedKeys && usedKeys.has(_key)) continue;
+                if (usedKeys) usedKeys.add(_key);
+
+                return {
+                    dividend: nStr, divisor: dStr, answer: addCommas(ansStr),
+                    display: `<span class="abacus-font">${nStr}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span><span class="round-mark">●</span>`
+                };
+            }
+
             if (forceSmallDividend) {
                 let dFracLen = randInt(2, 4);
                 let dInt = randInt(1, 9);
@@ -687,16 +869,13 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
                 let dCount = 1 + dFracLen;
                 if (dCount < 3 || dCount > 5) continue;
 
-                let aCount = 8 - dCount; // 商の桁数 = 3〜5
-                // 商を 0.0xxx 形式（先頭0で1未満を保証、有効桁=aCount）
+                let aCount = 8 - dCount;
                 let aFrac = "0" + generateNonZeroDigits(aCount - 1);
                 let aStr = "0." + aFrac;
                 let valA = parseFloat(aStr);
 
                 let valN = valD * valA;
                 if (valN >= 1 || valN <= 0) continue;
-                // 前半は小数第3位までで割り切れる必要あり → aStrは小数第aCount+1位なので、まずチェック
-                // 答えが小数第3位を超える場合は不適格（割り切れる前提のため）
                 if (needsRounding(valA, 3)) continue;
                 let nStr = parseFloat(valN.toPrecision(10)).toString();
                 if (!nStr.startsWith("0.")) continue;
@@ -715,55 +894,82 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
                 };
             }
 
-            // forceSmallDivisorFront: 前半用「割る数が1未満（割り切れる）」
-            // - true または 'normal': 0.xxx 形式（先頭ゼロなし）
-            // - 'extra': 0.0xxx 形式（先頭にゼロ1つ追加。位取り難度が高い）
-            // 戦略: 除数を1未満の小数（getSorobanDigitsで3〜5桁）、答えを小数第3位までの値、被除数 = 除数×答え
-            // 注意: getSorobanDigitsは「0.0234」を4桁と数える（先頭0以降の全桁）。
-            //   そのため 'extra' では「先頭0が1個 + 非ゼロ N桁 = 全体 N+1 桁」となるよう構築する。
-            if (forceSmallDivisorFront) {
+            // === 割る数が1未満 + 割り切れない (●版・新規追加) ===
+            if (forceSmallDivisorFront && forceInexactRound) {
                 const useExtraZero = (forceSmallDivisorFront === 'extra');
-
-                // dCount = getSorobanDigits の値（除数+商=8 の制約に使う桁）
-                // normal: 3〜5。extra: 4〜5（「0.0」始まりは最低でも先頭0+非ゼロ3桁=4）
                 let dCount = useExtraZero ? randInt(4, 5) : randInt(3, 5);
                 let dStr;
                 if (useExtraZero) {
-                    // "0.0" + 非ゼロ(dCount-1)桁 → getSorobanDigitsはdCount
                     dStr = "0.0" + generateNonZeroDigits(dCount - 1);
                 } else {
-                    // "0." + 非ゼロdCount桁 → getSorobanDigitsはdCount
+                    dStr = "0." + generateNonZeroDigits(dCount);
+                }
+                let valD = parseFloat(dStr);
+                if (!isFinite(valD) || valD === 0) continue;
+                if (getSorobanDigits(dStr) !== dCount) continue;
+
+                let nLen = randInt(3, 8);
+                let nBase = generateNonZeroDigits(nLen);
+                let nStr = makeNumber(nBase, Math.random() < 0.5);
+                if (nStr.includes("0") && !nStr.startsWith("0.")) continue;
+                let valN = parseFloat(nStr);
+
+                let quotient = valN / valD;
+                if (!isFinite(quotient) || quotient <= 0) continue;
+                if (!needsRounding(quotient, 3)) continue;
+
+                let fin = finalizeDivAnswer(quotient, true);
+                if (!fin) continue;
+                let ansStr = fin.ansStr;
+                if (parseFloat(ansStr) === 0) continue;
+
+                let aCount = getSorobanDigits(ansStr);
+                if (aCount === 0) continue;
+                if (dCount + aCount !== 8) continue;
+
+                let nDigits = getSorobanDigits(nStr);
+                if (nDigits < 2 || nDigits > 8) continue;
+
+                const _key = nStr + "|" + dStr;
+                if (usedKeys && usedKeys.has(_key)) continue;
+                if (usedKeys) usedKeys.add(_key);
+
+                return {
+                    dividend: nStr, divisor: dStr, answer: addCommas(ansStr),
+                    display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${dStr}</span><span class="round-mark">●</span>`
+                };
+            }
+
+            // forceSmallDivisorFront: 前半用「割る数が1未満（割り切れる）」
+            if (forceSmallDivisorFront) {
+                const useExtraZero = (forceSmallDivisorFront === 'extra');
+
+                let dCount = useExtraZero ? randInt(4, 5) : randInt(3, 5);
+                let dStr;
+                if (useExtraZero) {
+                    dStr = "0.0" + generateNonZeroDigits(dCount - 1);
+                } else {
                     dStr = "0." + generateNonZeroDigits(dCount);
                 }
                 let valD = parseFloat(dStr);
                 if (!isFinite(valD) || valD === 0) continue;
 
-                // getSorobanDigitsで一致確認
                 let dCountActual = getSorobanDigits(dStr);
                 if (dCountActual !== dCount) continue;
 
-                let aCount = 8 - dCount; // 商の桁数 = 3〜5
+                let aCount = 8 - dCount;
 
-                // 答えのバリエーション: 整数〜小数（小数第3位まで）
-                // 答え=valDの逆数オーダーになる: valD≒0.111〜0.99999なので答え≒1.0〜9.0+
-                // パターン1: 答えを整数(aCount桁) → 例 0.234 ÷ 答え=123 → 0.234*123=28.782（被除数小数）
-                // パターン2: 答えを小数 → 桁数調整しやすい
-
-                // ランダムに答えを生成（小数第3位以内）
                 let aBase = generateNonZeroDigits(aCount);
                 let aStr;
                 let r = Math.random();
                 if (r < 0.4) {
-                    // 整数の答え
                     aStr = aBase;
                 } else if (r < 0.7 && aCount >= 2) {
-                    // 整数部1〜2桁＋小数部
                     let iLen = randInt(1, Math.min(aCount - 1, 2));
                     let fLen = aCount - iLen;
-                    if (fLen > 3) continue; // 小数第3位超過は不可
+                    if (fLen > 3) continue;
                     aStr = aBase.slice(0, iLen) + "." + aBase.slice(iLen);
                 } else {
-                    // 0.xxx形式（aCount=3でないと小数第3位超過になるので注意）
                     if (aCount > 3) continue;
                     aStr = "0." + aBase;
                 }
@@ -771,20 +977,14 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
                 if (aStr.includes('.') && aStr.split('.')[1].length > 3) continue;
                 let valA = parseFloat(aStr);
                 if (!isFinite(valA) || valA === 0) continue;
-                // 答えが小数第3位を超えないか再確認
                 if (needsRounding(valA, 3)) continue;
 
-                // 被除数 = 除数 × 答え（割り切れる）
                 let valN = valD * valA;
                 if (!isFinite(valN) || valN === 0) continue;
                 let nStr = parseFloat(valN.toPrecision(12)).toString();
 
-                // 被除数の表示形式チェック
-                // 内部ゼロ（123 の中の 0 など）はNGだが、0.xxx 形式はOK、
-                // また 0 から始まる小数でも内部に 0 があるのは構わない（自然な計算結果）
                 if (nStr.includes("0") && !nStr.startsWith("0.") && !nStr.startsWith("0")) continue;
 
-                // 被除数の桁数が極端でないことを確認
                 let nDigits = getSorobanDigits(nStr);
                 if (nDigits < 2 || nDigits > 8) continue;
 
@@ -804,10 +1004,21 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
             let dStr = forceIntDiv ? dBase : makeNumber(dBase, Math.random() < 0.5);
             let valD = parseFloat(dStr);
             let dIsDecimal = dStr.includes(".");
-            let isExactMode = forceStar ? false : (forceIntDiv ? true : (dIsDecimal ? Math.random() < 0.2 : Math.random() < 0.8));
+            // isExactMode: 割り切れるモード(else=★モード)
+            // forceStar=true → ★モードへ
+            // forceIntDiv, forceSmallAnswer, forceSmallDividend, forceSmallDivisorFront →
+            //   ★ではなく専用ロジックを通すべきなので exactMode を強制
+            // それ以外(通常生成) → 確率で揺らす
+            let isExactMode;
+            if (forceStar) {
+                isExactMode = false;
+            } else if (forceIntDiv || forceSmallAnswer || forceSmallDividend || forceSmallDivisorFront) {
+                isExactMode = true;
+            } else {
+                isExactMode = dIsDecimal ? Math.random() < 0.2 : Math.random() < 0.8;
+            }
 
             if (isExactMode) {
-                // ★割り切れる問題：答えは小数第3位までに制限
                 let aBase = generateNonZeroDigits(aLen);
                 let aStr;
                 if (forceIntDiv) {
@@ -829,7 +1040,9 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
                 let nDigits = getSorobanDigits(nStr);
                 if (nDigits < 3 || nDigits > 8) continue;
 
-                // 桁数チェック（除数+商=8）
+                // 答え1未満系: 被除数Nと割る数Bが両方整数になる場合は弾く（整÷整の見た目を回避）
+                if (forceSmallAnswer && !dStr.includes('.') && !nStr.includes('.')) continue;
+
                 let dCount = getSorobanDigits(dStr);
                 let aCount = getSorobanDigits(aStr);
                 if (dCount + aCount !== 8) continue;
@@ -839,24 +1052,22 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
                     display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span>`
                 };
             } else {
-                // ★割り切れない（四捨五入）: 答えの小数第3位が4 or 5（ボーダー）
-                // 戦略: ランダムな被除数を作り、商が「四捨五入で4または5に丸まる」かつ
-                //       「割り切れない（小数第4位以降に数字が残る）」ものを採用
                 let nLen = randInt(3, 8);
                 let nBase = generateNonZeroDigits(nLen);
                 let nStr = makeNumber(nBase, Math.random() < 0.6);
                 if (nStr.includes("0") && !nStr.startsWith("0.")) continue;
 
+                // ★問題: 割る数Bと被除数Nが両方整数（=整数÷整数の見た目）になるのを禁止
+                // B,Nの少なくとも一方が小数を含むこと
+                if (forceStar && !dStr.includes('.') && !nStr.includes('.')) continue;
+
                 let valN = parseFloat(nStr);
                 let quotient = valN / valD;
 
-                // 必ず割り切れない（小数第4位以降に有効桁が残る）
                 if (!needsRounding(quotient, 3)) continue;
 
-                // 四捨五入後の小数第3位が4 or 5（ボーダー）
                 let rounded = roundTo(quotient, 3);
                 let absRounded = Math.abs(rounded);
-                // 小数第3位の数字を取り出す
                 let frac3 = Math.round(absRounded * 1000) % 10;
                 if (frac3 !== 4 && frac3 !== 5) continue;
 
@@ -876,7 +1087,6 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
                 if (usedKeys && usedKeys.has(_starKey)) continue;
                 if (usedKeys) usedKeys.add(_starKey);
 
-                // 「★」は四捨五入ボーダー、「●」は四捨五入が必要な印
                 return {
                     dividend: nStr, divisor: dStr, answer: addCommas(ansStr),
                     display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span><span class="round-mark">●</span><span class="diff-mark">★</span>`
@@ -885,119 +1095,228 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
 
         } else {
             // ===== 後半(11-20問) =====
-            if (forceSmallAnswer) continue;
+            // 新仕様:
+            //   - A(被除数)はすべて整数, 答えもすべて整数
+            //   - 割る数+答え=8桁 (絶対条件)
+            //   - forceIntDiv=true: 整数÷整数（割り切れる）→ Aは8桁固定
+            //   - それ以外: A整数, B小数を含む (B>=1 / 0.xxx / 0.0xxx)
+            //   - forceInexact=true: 小数含む・割り切れない（●）→ Aは3-7桁
+            //   - forceStar=true: 小数含む・割り切れない・境界値（●★）→ Aは3-7桁
+            //   - forceADigits: Aの桁数指定 (3〜8)。小数含むモードでは
+            //     目標桁数に応じてBの形式を確率的に選ぶことで分布を制御。
 
-            if (forceInexact || forceIntInexact) {
+            if (forceSmallAnswer || forceIntInexact || forceShortDividend ||
+                forceSmallDividend || forceSmallDivisorFront || forceInexactRound) {
+                // 後半では使わない旧フラグ → スキップして再試行
+                continue;
+            }
+
+            // === 小数含む・割り切れない（●） / 小数含む・★問題（●★） ===
+            if (forceInexact || forceStar) {
+                let targetALen = forceADigits > 0 ? forceADigits : randInt(3, 7);
+                if (targetALen < 3 || targetALen > 7) continue;
+
+                // Bの形式選択（前半同様に目標桁数に応じて確率制御）
+                let pGte1, pLt1, pLt01;
+                if (targetALen >= 6)      { pGte1 = 0.7; pLt1 = 0.25; pLt01 = 0.05; }
+                else if (targetALen === 5){ pGte1 = 0.4; pLt1 = 0.55; pLt01 = 0.05; }
+                else if (targetALen === 4){ pGte1 = 0.05;pLt1 = 0.45; pLt01 = 0.50; }
+                else                      { pGte1 = 0.0; pLt1 = 0.20; pLt01 = 0.80; }
+
+                const r2 = Math.random();
+                let bMode;
+                if (r2 < pGte1) bMode = 'gte1';
+                else if (r2 < pGte1 + pLt1) bMode = 'lt1';
+                else bMode = 'lt01';
+
+                let dLen2 = randInt(3, 5);
+                let aLen2 = 8 - dLen2;
+                if (aLen2 < 1 || aLen2 > 7) continue;
+
                 let dStr;
-                if (forceIntInexact) {
-                    dStr = dBase;
+                if (bMode === 'gte1') {
+                    let dBase2 = generateNonZeroDigits(dLen2);
+                    if (dBase2.length < 2) continue;
+                    let pos = randInt(1, dBase2.length - 1);
+                    dStr = dBase2.slice(0, pos) + "." + dBase2.slice(pos);
+                } else if (bMode === 'lt1') {
+                    dStr = "0." + generateNonZeroDigits(dLen2);
                 } else {
-                    dStr = makeNumber(dBase, Math.random() < 0.5);
+                    dStr = "0.0" + generateNonZeroDigits(dLen2 - 1);
                 }
                 let valD = parseFloat(dStr);
+                if (!isFinite(valD) || valD === 0) continue;
                 let dCount = getSorobanDigits(dStr);
-                if (dCount < 3 || dCount > 5) continue;
+                if (dCount !== dLen2) continue;
 
-                let nLen = randInt(3, 8);
-                let nBase = generateNonZeroDigits(nLen);
-                let nStr = forceIntInexact ? nBase : makeNumber(nBase, Math.random() < 0.5);
-                if (nStr.includes("0") && !nStr.startsWith("0.")) continue;
+                // 被除数Nを直接生成（整数、目標桁数に近い）
+                // Nの桁数を概算で targetALen にする
+                let nStr;
+                {
+                    let nLen = targetALen;
+                    if (retry < 200000) {
+                        // 厳密に targetALen 桁
+                    } else {
+                        nLen = targetALen + (Math.random() < 0.5 ? -1 : 1);
+                        if (nLen < 1) nLen = 1;
+                        if (nLen > 8) nLen = 8;
+                    }
+                    nStr = generateNonZeroDigits(nLen);
+                }
+                if (nStr.includes(".")) continue;
+                let nDigits = getSorobanDigits(nStr);
 
                 let valN = parseFloat(nStr);
                 let quotient = valN / valD;
+                if (!isFinite(quotient) || quotient <= 0) continue;
 
-                let borderDigit = Math.floor(quotient * 10) % 10;
-                if (borderDigit !== 4 && borderDigit !== 5) continue;
+                // 後半は答えが整数 → 整数で四捨五入
+                // 割り切れない=小数第1位以降が残る
+                if (Math.abs(quotient - Math.round(quotient)) < 1e-9) continue;
 
                 let ansStr = String(Math.round(quotient));
                 if (!ansStr || ansStr === '0') continue;
 
                 let aCount = getSorobanDigits(ansStr);
+                if (aCount === 0) continue;
                 if (dCount + aCount !== 8) continue;
-                let nDigits = getSorobanDigits(nStr);
-                if (nDigits < 2 || nDigits > 8) continue;
 
-                const _ikey2 = nStr + "|" + dStr;
-                if (usedKeys && usedKeys.has(_ikey2)) continue;
-                if (usedKeys) usedKeys.add(_ikey2);
+                // ★問題: 答えの最終桁(=四捨五入の判断桁)が境界値(4 or 5)
+                // = quotientの小数第1位が4 or 5
+                if (forceStar) {
+                    let frac1 = Math.floor((quotient - Math.floor(quotient)) * 10);
+                    if (frac1 !== 4 && frac1 !== 5) continue;
+                }
 
+                const _key = nStr + "|" + dStr;
+                if (usedKeys && usedKeys.has(_key)) continue;
+                if (usedKeys) usedKeys.add(_key);
+
+                const starMark = forceStar ? '<span class="diff-mark">★</span>' : '';
                 return {
                     dividend: nStr, divisor: dStr, answer: addCommas(ansStr),
-                    display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span><span class="round-mark">●</span>`
+                    display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span><span class="round-mark">●</span>${starMark}`
                 };
             }
 
-            if (forceShortDividend) {
-                let dStr = makeNumber(dBase, Math.random() < 0.5);
-                let valD = parseFloat(dStr);
-                let dCount = getSorobanDigits(dStr);
-                if (dCount < 3 || dCount > 5) continue;
-                let aLen2 = 8 - dCount;
+            // === 整数÷整数（割り切れる）===
+            // Aは8桁固定 (B整数 × 答え整数 で d+a=8 の場合、Aは7-8桁になるが8桁を強制)
+            if (forceIntDiv) {
+                let dLen2 = randInt(3, 5);
+                let aLen2 = 8 - dLen2;
                 if (aLen2 < 1 || aLen2 > 7) continue;
+
+                let dStr = generateNonZeroDigits(dLen2);
+                let valD = parseFloat(dStr);
                 let aStr = generateNonZeroDigits(aLen2);
                 let valA = parseFloat(aStr);
-                let aCount = getSorobanDigits(aStr);
-                if (dCount + aCount !== 8) continue;
                 let valN = valD * valA;
                 let nStr = parseFloat(valN.toPrecision(12)).toString();
+                if (nStr.includes(".")) continue;
                 if (nStr.includes("0") && !nStr.startsWith("0.")) continue;
                 let nDigits = getSorobanDigits(nStr);
-                if (nDigits < 3 || nDigits > 5) continue;
-                const _key1 = nStr + "|" + dStr;
-                if (usedKeys && usedKeys.has(_key1)) continue;
-                if (usedKeys) usedKeys.add(_key1);
+                // 整数÷整数では A=8桁固定
+                if (nDigits !== 8) continue;
+
+                let dCount = getSorobanDigits(dStr);
+                let aCount = getSorobanDigits(aStr);
+                if (dCount + aCount !== 8) continue;
+
+                const _key = nStr + "|" + dStr;
+                if (usedKeys && usedKeys.has(_key)) continue;
+                if (usedKeys) usedKeys.add(_key);
                 return {
                     dividend: nStr, divisor: dStr, answer: addCommas(aStr),
                     display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span>`
                 };
             }
 
-            if (forceSmallDivisor) {
-                let dFracLen = randInt(3, 5);
-                let dFrac = generateNonZeroDigits(dFracLen);
-                let dStr = "0." + dFrac;
-                let valD = parseFloat(dStr);
-                let dCount = getSorobanDigits(dStr);
-                let aLen2 = 8 - dCount;
-                if (aLen2 < 1 || aLen2 > 7) continue;
-                let aStr = generateNonZeroDigits(aLen2);
-                let valA = parseFloat(aStr);
-                let aCount = getSorobanDigits(aStr);
-                if (dCount + aCount !== 8) continue;
-                let valN = valD * valA;
-                let nStr = parseFloat(valN.toPrecision(12)).toString();
-                if (nStr.includes("0") && !nStr.startsWith("0.")) continue;
-                let nDigits = getSorobanDigits(nStr);
-                if (nDigits < 2 || nDigits > 8) continue;
-                const _key2 = nStr + "|" + dStr;
-                if (usedKeys && usedKeys.has(_key2)) continue;
-                if (usedKeys) usedKeys.add(_key2);
-                return {
-                    dividend: nStr, divisor: dStr, answer: addCommas(aStr),
-                    display: `<span class="abacus-font">${addCommas(nStr)}</span><span class="symbol-font">÷</span><span class="abacus-font">${addCommas(dStr)}</span>`
-                };
-            }
+            // === A整数, B小数を含む (デフォルト後半モード) ===
+            // Bパターン:
+            //   (a) B>=1 で小数（例: 1.23, 12.34, 1.234） → A=6-7桁
+            //   (b) B<1 で 0.xxx 形式 → A=4-5桁
+            //   (c) B<1 で 0.0xxx 形式 → A=3-4桁
+            // 目標Aの桁数(forceADigits) に応じて Bの形式を選択
 
-            let useDivDec = Math.random() < 0.5;
-            let dStr;
-            if (useDivDec && dBase.length >= 2) {
-                let decPos = randInt(1, dBase.length - 1);
-                dStr = dBase.slice(0, decPos) + "." + dBase.slice(decPos);
+            let targetALen = forceADigits > 0 ? forceADigits : randInt(3, 7);
+            if (targetALen < 3 || targetALen > 7) continue;
+
+            // 目標桁数に応じて Bの形式の確率分布を決定
+            // (gte1=B>=1小数, lt1=0.xxx, lt01=0.0xxx)
+            let pGte1, pLt1, pLt01;
+            if (targetALen >= 6) {
+                // 6-7桁狙い → B>=1 が出やすい
+                pGte1 = 0.7; pLt1 = 0.25; pLt01 = 0.05;
+            } else if (targetALen === 5) {
+                // 5桁狙い → B>=1 と 0.xxx
+                pGte1 = 0.4; pLt1 = 0.55; pLt01 = 0.05;
+            } else if (targetALen === 4) {
+                // 4桁狙い → 0.xxx と 0.0xxx
+                pGte1 = 0.05; pLt1 = 0.45; pLt01 = 0.50;
             } else {
-                dStr = dBase;
+                // 3桁狙い → 0.0xxx ほぼ確定
+                pGte1 = 0.0; pLt1 = 0.20; pLt01 = 0.80;
+            }
+
+            const r = Math.random();
+            let bMode;
+            if (r < pGte1) bMode = 'gte1';
+            else if (r < pGte1 + pLt1) bMode = 'lt1';
+            else bMode = 'lt01';
+
+            // Bの桁数 dCount を決定
+            let dLen2;
+            if (bMode === 'lt01') {
+                // 0.0xxx は dCount = 1 + (xxxの長さ) なので dCount >= 2
+                // 0.0の後ろが2文字以上必要 → dCount in [3,5]
+                dLen2 = randInt(3, 5);
+            } else {
+                dLen2 = randInt(3, 5);
+            }
+            let aLen2 = 8 - dLen2;
+            if (aLen2 < 1 || aLen2 > 7) continue;
+
+            let dStr;
+            if (bMode === 'gte1') {
+                let dBase2 = generateNonZeroDigits(dLen2);
+                if (dBase2.length < 2) continue;
+                let pos = randInt(1, dBase2.length - 1);
+                dStr = dBase2.slice(0, pos) + "." + dBase2.slice(pos);
+            } else if (bMode === 'lt1') {
+                dStr = "0." + generateNonZeroDigits(dLen2);
+            } else {
+                // 0.0xxx (dLen2 = 0.0の後ろ含めた有効桁数)
+                // 例: dLen2=3なら "0.0xx", dLen2=4なら "0.0xxx"
+                dStr = "0.0" + generateNonZeroDigits(dLen2 - 1);
             }
             let valD = parseFloat(dStr);
+            if (!isFinite(valD) || valD === 0) continue;
             let dCount = getSorobanDigits(dStr);
-            let aBase = generateNonZeroDigits(aLen);
-            let aStr = aBase;
+            if (dCount !== dLen2) continue;
+
+            let aStr = generateNonZeroDigits(aLen2);
             let valA = parseFloat(aStr);
-            let aCount = getSorobanDigits(aStr);
-            if (dCount + aCount !== 8) continue;
             let valN = valD * valA;
             let nStr = parseFloat(valN.toPrecision(12)).toString();
+            if (nStr.includes(".")) continue;
             if (nStr.includes("0") && !nStr.startsWith("0.")) continue;
             let nDigits = getSorobanDigits(nStr);
-            if (nDigits < 3 || nDigits > 8) continue;
+
+            // forceADigits 指定時: 厳密一致をしばらく要求し、
+            // ループ後半 (試行が進んでもダメ) なら緩める
+            if (forceADigits > 0) {
+                // retry < 250000 まではぴったり, それ以降は ±1 で許容
+                if (retry < 200000) {
+                    if (nDigits !== forceADigits) continue;
+                } else {
+                    // フォールバック: ±1 桁を許容
+                    if (Math.abs(nDigits - forceADigits) > 1) continue;
+                }
+            }
+
+            let aCount = getSorobanDigits(aStr);
+            if (dCount + aCount !== 8) continue;
+
             const _key3 = nStr + "|" + dStr;
             if (usedKeys && usedKeys.has(_key3)) continue;
             if (usedKeys) usedKeys.add(_key3);
@@ -1007,26 +1326,35 @@ function generateOneDiv(isTop, forceIntAnswer = false, forceKampu = false, force
             };
         }
     }
-    return generateOneDiv(isTop, forceIntAnswer, forceKampu, forceIntDiv, forceStar, forceSmallAnswer, forceSmallDividend, forceInexact, forceIntInexact, forceShortDividend, forceSmallDivisor, usedKeys, forceSmallDivisorFront);
+    return generateOneDiv(isTop, forceIntAnswer, forceKampu, forceIntDiv, forceStar, forceSmallAnswer, forceSmallDividend, forceInexact, forceIntInexact, forceShortDividend, forceSmallDivisor, usedKeys, forceSmallDivisorFront, forceInexactRound, forceADigits);
 }
 
 function generateDivSet(total) {
     const list = [];
 
-    // 還付トラップは後半(10-19)のみに配置（前半枠を常に10個確保するため）
-    const backIndices = [10,11,12,13,14,15,16,17,18,19].sort(() => Math.random() - 0.5);
-    const kampuIndices = new Set(backIndices.slice(0, 3));
-
     const frontIndices = [0,1,2,3,4,5,6,7,8,9]
         .sort(() => Math.random() - 0.5);
 
     let cursor = 0;
-    const intDivIndices        = new Set(frontIndices.slice(cursor, cursor += 2)); // ① 整数同士・割り切れる
-    const smallAnswerIndices   = new Set(frontIndices.slice(cursor, cursor += 2)); // ② 答え1未満
-    const smallDividendIndices = new Set(frontIndices.slice(cursor, cursor += 2)); // ③ 被除数1未満
-    const smallDivisorFrontIndices = new Set(frontIndices.slice(cursor, cursor += 2)); // ⑦ 割る数1未満
-    const frontStarIndices     = new Set(frontIndices.slice(cursor, cursor += 1)); // ④ ★ボーダー
-    const frontIntInexactIndices = new Set(frontIndices.slice(cursor, cursor += 1)); // ⑤ 整数÷整数割り切れない
+    const intDivIndices        = new Set(frontIndices.slice(cursor, cursor += 3)); // 整数÷整数(割り切れる) 2→3問
+    const smallAnswerIndices   = new Set(frontIndices.slice(cursor, cursor += 2));
+    const smallDividendIndices = new Set(frontIndices.slice(cursor, cursor += 1)); // 被除数が1未満 2→1問
+    const smallDivisorFrontIndices = new Set(frontIndices.slice(cursor, cursor += 2));
+    const frontStarIndices     = new Set(frontIndices.slice(cursor, cursor += 1));
+    const frontIntInexactIndices = new Set(frontIndices.slice(cursor, cursor += 1));
+
+    // === 「1未満系から2問を●版に」抽選 ===
+    // smallAnswer / smallDividend / smallDivisorFront の合計6個から
+    // ランダムに2つを選び、●版（割り切れない）として生成する
+    const smallVariantPool = [
+        ...Array.from(smallAnswerIndices).map(idx => ({idx, type: 'answer'})),
+        ...Array.from(smallDividendIndices).map(idx => ({idx, type: 'dividend'})),
+        ...Array.from(smallDivisorFrontIndices).map(idx => ({idx, type: 'divisor'}))
+    ];
+    smallVariantPool.sort(() => Math.random() - 0.5);
+    const inexactSmallTargets = smallVariantPool.slice(0, 2);
+    const inexactSmallMap = new Map();
+    inexactSmallTargets.forEach(t => inexactSmallMap.set(t.idx, t.type));
 
     const firstHalfProblems = new Array(10).fill(null);
     const divUsedKeys = new Set();
@@ -1037,14 +1365,18 @@ function generateDivSet(total) {
         firstHalfProblems[idx] = p;
     }
 
+    // 答えが1未満（割り切れる版 or ●版）
     for (const idx of smallAnswerIndices) {
-        let p = generateOneDiv(true, false, false, false, false, true, false, false, false, false, false, divUsedKeys);
+        const inexact = inexactSmallMap.get(idx) === 'answer';
+        let p = generateOneDiv(true, false, false, false, false, true, false, false, false, false, false, divUsedKeys, false, inexact);
         p.no = idx + 1;
         firstHalfProblems[idx] = p;
     }
 
+    // 被除数が1未満（割り切れる版 or ●版）
     for (const idx of smallDividendIndices) {
-        let p = generateOneDiv(true, false, false, false, false, false, true, false, false, false, false, divUsedKeys);
+        const inexact = inexactSmallMap.get(idx) === 'dividend';
+        let p = generateOneDiv(true, false, false, false, false, false, true, false, false, false, false, divUsedKeys, false, inexact);
         p.no = idx + 1;
         firstHalfProblems[idx] = p;
     }
@@ -1061,54 +1393,90 @@ function generateDivSet(total) {
         firstHalfProblems[idx] = p;
     }
 
-    // ⑦ 割る数が1未満（割り切れる）2問
-    //   - 1問は 0.xxx 形式（normal）
-    //   - 1問は 0.0xxx 形式（extra: 先頭に0が1つ多い、位取り難度高）
+    // 割る数が1未満（normal/extra の variant 振り分け＋●版判定）
     const smallDivisorFrontList = Array.from(smallDivisorFrontIndices).sort(() => Math.random() - 0.5);
     const smallDivisorVariants = ['normal', 'extra'];
     smallDivisorFrontList.forEach((idx, i) => {
         const variant = smallDivisorVariants[i % 2];
-        let p = generateOneDiv(true, false, false, false, false, false, false, false, false, false, false, divUsedKeys, variant);
+        const inexact = inexactSmallMap.get(idx) === 'divisor';
+        let p = generateOneDiv(true, false, false, false, false, false, false, false, false, false, false, divUsedKeys, variant, inexact);
         p.no = idx + 1;
         firstHalfProblems[idx] = p;
     });
 
     for (let idx = 0; idx < 10; idx++) {
         if (firstHalfProblems[idx] !== null) continue;
-        let isKampu = kampuIndices.has(idx);
-        let p = generateOneDiv(true, false, isKampu, false, false, false, false, false, false, false, false, divUsedKeys);
+        // 前半の埋め残し（特殊タイプに当たらなかった枠）→ 通常生成
+        let p = generateOneDiv(true, false, false, false, false, false, false, false, false, false, false, divUsedKeys);
         p.no = idx + 1;
         firstHalfProblems[idx] = p;
     }
 
-    const backNonKampu = Array.from({length: total - 10}, (_, i) => i + 10)
-        .filter(i => !kampuIndices.has(i))
-        .sort(() => Math.random() - 0.5);
-    let bCursor = 0;
-    const backStarIndices        = new Set(backNonKampu.slice(bCursor, bCursor += 1));
-    const backIntInexactIndices  = new Set(backNonKampu.slice(bCursor, bCursor += 1));
-    const backInexactIndices     = new Set(backNonKampu.slice(bCursor, bCursor += 1));
-    const backShortDivIndices    = new Set(backNonKampu.slice(bCursor, bCursor += 2));
-    const backSmallDivisorIndices= new Set(backNonKampu.slice(bCursor, bCursor += 2));
+    // ===== 後半10問の生成（新仕様） =====
+    // - 整数÷整数(割り切れる): 4問 → A=8桁固定
+    // - 小数を含む・割り切れる: 3問 → A=3〜7桁
+    // - 小数を含む・割り切れない(●): 2問 → A=3〜7桁
+    // - 小数を含む・割り切れない+境界値(●★): 1問 → A=3〜7桁
+    //   (●系3問の合計はuser指示通り、うち1問が★問題)
+    // - 還付トラップ: 廃止
 
-    const secondHalfProblems = [];
-    for (let i = 10; i < total; i++) {
-        let isKampu = kampuIndices.has(i);
-        let p;
-        if (backStarIndices.has(i)) {
-            p = generateOneDiv(false, false, false, false, false, false, false, true, false, false, false, divUsedKeys);
-        } else if (backIntInexactIndices.has(i)) {
-            p = generateOneDiv(false, false, false, false, false, false, false, false, true, false, false, divUsedKeys);
-        } else if (backInexactIndices.has(i)) {
-            p = generateOneDiv(false, false, false, false, false, false, false, true, false, false, false, divUsedKeys);
-        } else if (backShortDivIndices.has(i)) {
-            p = generateOneDiv(false, false, false, false, false, false, false, false, false, true, false, divUsedKeys);
-        } else if (backSmallDivisorIndices.has(i)) {
-            p = generateOneDiv(false, false, false, false, false, false, false, false, false, false, true, divUsedKeys);
-        } else {
-            p = generateOneDiv(false, false, isKampu, false, false, false, false, false, false, false, false, divUsedKeys);
+    const backTotal = total - 10; // 通常10
+    const backTypes = [];
+    const intDivCount = 4;
+    const mixedExactCount = 3;
+    const mixedInexactCount = 2;
+    const mixedStarCount = 1;
+    for (let i = 0; i < intDivCount; i++) backTypes.push('intDiv');
+    for (let i = 0; i < mixedExactCount; i++) backTypes.push('mixed');
+    for (let i = 0; i < mixedInexactCount; i++) backTypes.push('mixedInexact');
+    for (let i = 0; i < mixedStarCount; i++) backTypes.push('mixedStar');
+    backTypes.sort(() => Math.random() - 0.5);
+
+    // 小数含む系(計6問)のAの桁数を重み付き分布で決定
+    const weights = [
+        { digits: 7, weight: 35 },
+        { digits: 6, weight: 25 },
+        { digits: 5, weight: 20 },
+        { digits: 4, weight: 10 },
+        { digits: 3, weight: 10 }
+    ];
+    const totalWeight = weights.reduce((a, b) => a + b.weight, 0);
+    const pickWeightedDigit = () => {
+        let r = Math.random() * totalWeight;
+        for (const w of weights) {
+            r -= w.weight;
+            if (r <= 0) return w.digits;
         }
-        p.no = i + 1;
+        return weights[0].digits;
+    };
+
+    const mixedTotalCount = mixedExactCount + mixedInexactCount + mixedStarCount;
+    const mixedDigits = [];
+    for (let i = 0; i < mixedTotalCount; i++) mixedDigits.push(pickWeightedDigit());
+
+    let mixedDigitsCursor = 0;
+    const secondHalfProblems = [];
+    for (let i = 0; i < backTotal; i++) {
+        const type = backTypes[i];
+        let p;
+        if (type === 'intDiv') {
+            // 整数÷整数 (A=8桁固定)
+            p = generateOneDiv(false, false, false, true, false, false, false, false, false, false, false, divUsedKeys, false, false, 8);
+        } else if (type === 'mixed') {
+            // 小数を含む・割り切れる
+            const aDigits = mixedDigits[mixedDigitsCursor++];
+            p = generateOneDiv(false, false, false, false, false, false, false, false, false, false, false, divUsedKeys, false, false, aDigits);
+        } else if (type === 'mixedInexact') {
+            // 小数を含む・割り切れない (●)
+            const aDigits = mixedDigits[mixedDigitsCursor++];
+            // forceInexact=true で後半の●ブロックへ
+            p = generateOneDiv(false, false, false, false, false, false, false, true, false, false, false, divUsedKeys, false, false, aDigits);
+        } else { // mixedStar
+            // 小数を含む・割り切れない+境界値 (●★)
+            const aDigits = mixedDigits[mixedDigitsCursor++];
+            p = generateOneDiv(false, false, false, false, true, false, false, false, false, false, false, divUsedKeys, false, false, aDigits);
+        }
+        p.no = (10 + i) + 1;
         secondHalfProblems.push(p);
     }
 
@@ -1119,15 +1487,6 @@ function generateDivSet(total) {
    3. みとり算
    ========================================================================= */
  
-/**
- * 見取り算の二度借り検出
- * 各3桁ブロック(下3桁、中3桁、上3桁、最上位)を独立に下から累計し、
- * 累計が負になって上位から1000借りる(=+1000する)操作の合計回数を返す。
- *  - 0: 借りなし
- *  - 1: 1回借り(普通)
- *  - 2以上: 二度借り(△マーク対象)
- *  - 3以上: 三度借り(★マーク対象、△を兼ねる)
- */
 function countBorrows(terms) {
     let totalBorrows = 0;
     const numBlocks = 4;
@@ -1195,17 +1554,10 @@ function calculateTotalFingering(terms) {
     }
     return total;
 }
-/**
- * d桁の正の整数で、各桁の数字がすべてユニーク(同じ数字が現れない)なものを生成
- * 先頭桁は1-9、それ以外は0-9から重複なく選ぶ
- * 例: 4桁 → 2903, 8017 など / 7桁 → 8374062 など
- */
 function generateUniqueDigitNumber(d) {
     if (d < 1 || d > 10) return null;
-    // 0-9をシャッフルして先頭d個を取る
     const pool = [0,1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
     const selected = pool.slice(0, d);
-    // 先頭が0だったら、後ろの非0要素と入れ替える
     if (selected[0] === 0) {
         for (let i = 1; i < selected.length; i++) {
             if (selected[i] !== 0) {
@@ -1221,7 +1573,6 @@ function createSingleMitori(digitCounts, isSubtractionProblem) {
     let digits = [];
     for (const k in digitCounts) for (let i = 0; i < digitCounts[k]; i++) digits.push(parseInt(k));
     digits.sort(() => Math.random() - 0.5);
-    // 各項は「同一数字が現れない」ユニーク桁の数を生成
     let terms = digits.map(d => generateUniqueDigitNumber(d));
  
     if (isSubtractionProblem) {
@@ -1239,14 +1590,10 @@ function createSingleMitori(digitCounts, isSubtractionProblem) {
     };
 }
  
-/**
- * 借用回数 minBorrows 以上の見取り算問題を強制生成(差し替え用)
- */
 function generateForcedBorrowProblem(minBorrows, usedKeys) {
     let tries = 5000;
     while (tries--) {
         const config = Math.random() < 0.5 ? {4:2, 5:2, 6:2, 7:2} : {5:4, 6:4};
-        // 借りを発生させやすくするため減算問題で生成
         const p = createSingleMitori(config, true);
  
         if (p.answer <= 0) continue;
@@ -1260,11 +1607,6 @@ function generateForcedBorrowProblem(minBorrows, usedKeys) {
     return null;
 }
  
-/**
- * 見取り算20問セット生成
- *  - 通常生成後、二度借り(borrows>=2)が0問なら1問差し替えて保証
- *  - 三度借りは自然発生に任せる(約6%程度)
- */
 function generateMitoriSet(total) {
     const list = [];
     const usedKeys = new Set();
@@ -1290,7 +1632,6 @@ function generateMitoriSet(total) {
         });
     }
  
-    // 二度借り保証: 0問なら1問差し替え
     const hasDouble = list.some(p => p.borrows >= 2);
     if (!hasDouble) {
         const replaced = generateForcedBorrowProblem(2, usedKeys);
@@ -1337,7 +1678,6 @@ function generateAnzanSet(total) {
         let terms = [], totalVal = 0;
  
         while(!valid) {
-            // ユニーク桁制約: 各項で同じ数字が現れないようにする
             let p3 = [generateUniqueDigitNumber(3), generateUniqueDigitNumber(3), generateUniqueDigitNumber(3), generateUniqueDigitNumber(3)];
             let p2 = [generateUniqueDigitNumber(2), generateUniqueDigitNumber(2)];
             
