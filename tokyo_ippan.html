@@ -415,8 +415,14 @@ function formatOperand(str) {
     return parts[1] ? intPart + "." + parts[1] : intPart;
 }
 function formatAnswer(num, decimals) {
-    const rounded = roundTo(num, decimals);
-    if (decimals === 0) return addCommas(String(Math.round(rounded)));
+    // 浮動小数点誤差を補正してから四捨五入する。
+    // 例: 本来 1234.5 → 1235 となるべき値が num*1000=1234499999.9998 のように
+    //     僅かに小さく表現されると Math.round が切り捨ててしまうため、
+    //     符号付きの微小イプシロンを加えて補正する。
+    const f = Math.pow(10, decimals);
+    const eps = (num >= 0 ? 1 : -1) * 1e-6;
+    const rounded = Math.round(num * f + eps) / f;
+    if (decimals === 0) return addCommas(String(Math.round(num + eps)));
     let raw = rounded.toFixed(decimals);
     raw = raw.replace(/\.?0+$/, "");
     if (!raw.includes(".")) return addCommas(raw);
@@ -450,7 +456,7 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
             return {
                 originalText: `${aStr} × ${bStr}`,
                 display: `<span class="abacus-font">${formatOperand(aStr)}</span><span class="symbol-font">×</span><span class="abacus-font">${formatOperand(bStr)}</span>${mark}`,
-                answer: formatAnswer(rnd, decimals)
+                answer: formatAnswer(prod, decimals)
             };
         }
         const aStr = "0.0" + generateNonZeroDigits(3);
@@ -459,7 +465,7 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
         return {
             originalText: `${aStr} × ${bStr}`,
             display: `<span class="abacus-font">${formatOperand(aStr)}</span><span class="symbol-font">×</span><span class="abacus-font">${formatOperand(bStr)}</span>`,
-            answer: formatAnswer(roundTo(prod, decimals), decimals)
+            answer: formatAnswer(prod, decimals)
         };
     }
 
@@ -551,14 +557,14 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
         if (!isTop && Math.abs(rnd) < 1) continue;
         if (type === "II" && intDigits(rnd) !== 9) continue;
         const minAnsDigits = opts.forceVerySmallB ? 1 : 4;
-        if (getSorobanDigits(formatAnswer(rnd, decimals)) < minAnsDigits) continue;
+        if (getSorobanDigits(formatAnswer(prod, decimals)) < minAnsDigits) continue;
 
         const mark = isBorderline(prod, decimals) ? `<span class="diff-mark">★</span>` : '';
 
         return {
             originalText: `${aStr} × ${bStr}`,
             display: `<span class="abacus-font">${formatOperand(aStr)}</span><span class="symbol-font">×</span><span class="abacus-font">${formatOperand(bStr)}</span>${mark}`,
-            answer: formatAnswer(rnd, decimals)
+            answer: formatAnswer(prod, decimals)
         };
     }
     return generateMulProblem(isTop, forceSmallB, forceSmallDec, false, forceBorder, opts);
