@@ -311,6 +311,33 @@ function isBorderline(num, decimals) {
     const fraction = shifted - Math.floor(shifted);
     return (fraction >= 0.495 && fraction <= 0.504);
 }
+// 計算結果が四捨五入位置でちょうど 0.5（例: 234.5 や 1.2345）になるかを
+// 整数演算で厳密に判定する。clean な .5 は「明らかに切り上げ」で
+// 「4か5か」を迷わせる狙いに反するため、出題から除外する用途で使う。
+// aStr, bStr は乗数・被乗数の元文字列（"234"・"0.0023"・"12.34" 等）。
+function isExactHalfAtRounding(aStr, bStr, decimals) {
+    try {
+        const parse = (s) => {
+            s = String(s).replace(/,/g, '');
+            if (s.startsWith('-')) s = s.slice(1);
+            const dot = s.indexOf('.');
+            const i = dot === -1 ? s : s.slice(0, dot);
+            const f = dot === -1 ? '' : s.slice(dot + 1);
+            const digitStr = (i + f).replace(/^0+(?=\d)/, '') || '0';
+            return { digits: BigInt(digitStr), scale: f.length };
+        };
+        const a = parse(aStr), b = parse(bStr);
+        const P = a.digits * b.digits;             // 積 × 10^(scaleA+scaleB)
+        const s = (a.scale + b.scale) - decimals;  // 四捨五入位置までのスケール
+        if (s <= 0) return false;                  // 整数になる → .5 にならない
+        const denom = 10n ** BigInt(s);
+        const twoP = 2n * P;
+        if (twoP % denom !== 0n) return false;     // 半整数でない（本来の境界問題は残す）
+        return ((twoP / denom) % 2n === 1n);       // 奇数 → ちょうど .5
+    } catch (e) {
+        return false;
+    }
+}
 function getCost3Count(currentVal, addVal) {
     const sum = currentVal + addVal;
     if (sum < 10) return 0;
@@ -452,6 +479,7 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
             if (!isFinite(prod) || prod === 0) continue;
             const rnd = roundTo(prod, decimals);
             if (!isFinite(rnd) || rnd === 0) continue;
+            if (isExactHalfAtRounding(aStr, bStr, decimals)) continue;
             const mark = isBorderline(prod, decimals) ? `<span class="diff-mark">★</span>` : '';
             return {
                 originalText: `${aStr} × ${bStr}`,
@@ -544,6 +572,10 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
         const prod = A * B;
         if (!isFinite(prod) || prod === 0) continue;
         if (currentReqBorder && !isBorderline(prod, decimals)) continue;
+
+        // 計算結果がちょうど x.5（四捨五入位置が clean な .5）になる問題は
+        // 「明らかに切り上げ」で簡単すぎるため除外する
+        if (isExactHalfAtRounding(aStr, bStr, decimals)) continue;
 
         let score = calculateUnshiDifficulty(A, B);
         let th = analyzedParams.unshiThreshold;
