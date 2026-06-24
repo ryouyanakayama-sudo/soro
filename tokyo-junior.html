@@ -314,6 +314,13 @@ function isBorderline(num, decimals) {
     const fraction = shifted - Math.floor(shifted);
     return (fraction >= 0.495 && fraction <= 0.504);
 }
+// 四捨五入位置でちょうど ±.5 になる（例: 234.5）＝切り上げが一目で明白なケース。
+// 2級ではこれを「迷わない問題」として除外する（.5のすぐ上下＝迷う問題は残す）。
+function isExactlyHalfway(num, decimals) {
+    const x = 2 * Math.abs(num) * Math.pow(10, decimals);
+    const r = Math.round(x);
+    return Math.abs(x - r) < 1e-6 && (r % 2 === 1);
+}
 function getCost3Count(currentVal, addVal) {
     const sum = currentVal + addVal;
     if (sum < 10) return 0;
@@ -449,6 +456,7 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
             if (!isFinite(A) || !isFinite(B) || A === 0 || B === 0) continue;
             const prod = A * B;
             if (!isFinite(prod) || prod === 0) continue;
+            if (isExactlyHalfway(prod, decimals)) continue; // ちょうど±.5は出さない
             const rnd = roundTo(prod, decimals);
             if (!isFinite(rnd) || rnd === 0) continue;
             const mark = isBorderline(prod, decimals) ? `<span class="diff-mark">★</span>` : '';
@@ -543,6 +551,7 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
         if (!isFinite(A) || !isFinite(B) || A === 0 || B === 0) continue;
         const prod = A * B;
         if (!isFinite(prod) || prod === 0) continue;
+        if (isExactlyHalfway(prod, decimals)) continue; // 2級: ちょうど±.5（四捨五入が明白）は出さない
         if (currentReqBorder && !isBorderline(prod, decimals)) continue;
 
         let score = calculateUnshiDifficulty(A, B);
