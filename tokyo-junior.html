@@ -1594,12 +1594,53 @@ function generateUniqueDigitNumber(d) {
     }
     return parseInt(selected.join(''));
 }
+
+// 縦（桁位置＝位）ごとに同じ数字が出ないように複数の項を生成する。
+// lengths: 各項の桁数の配列（右揃えで縦に並ぶ前提）。
+// 各位の列について、その位に届く項どうしの数字がすべて異なるようにする。
+// horizontalUnique=true のときは各項内（横）の数字重複も避ける（従来仕様の踏襲）。
+// 戻り値: 各項の整数値の配列。
+function buildColumnUniqueTerms(lengths, horizontalUnique = true) {
+    const n = lengths.length;
+    const maxLen = Math.max.apply(null, lengths);
+    for (let attempt = 0; attempt < 80; attempt++) {
+        const rowDigits = lengths.map(L => new Array(L).fill(null)); // [row][左からの位置]
+        const rowUsed = lengths.map(() => new Set());                // 横の使用済み数字
+        let ok = true;
+        for (let c = 0; c < maxLen && ok; c++) {                     // c=0 は一の位
+            const rows = [];
+            for (let r = 0; r < n; r++) if (lengths[r] > c) rows.push(r);
+            const colUsed = new Set();                               // この位で使用済みの数字
+            const order = rows.slice().sort(() => Math.random() - 0.5);
+            for (const r of order) {
+                const isLeading = (c === lengths[r] - 1);            // この位が最上位桁＝先頭ゼロ不可
+                const cands = [];
+                for (let d = 0; d <= 9; d++) {
+                    if (colUsed.has(d)) continue;
+                    if (horizontalUnique && rowUsed[r].has(d)) continue;
+                    if (isLeading && d === 0) continue;
+                    cands.push(d);
+                }
+                if (cands.length === 0) { ok = false; break; }
+                const d = cands[Math.floor(Math.random() * cands.length)];
+                rowDigits[r][lengths[r] - 1 - c] = String(d);
+                colUsed.add(d);
+                rowUsed[r].add(d);
+            }
+        }
+        if (ok) return rowDigits.map(a => parseInt(a.join(''), 10));
+    }
+    // フォールバック: 横の一意制約を外す（縦の一意は維持しやすい）
+    if (horizontalUnique) return buildColumnUniqueTerms(lengths, false);
+    // それでも無理なら従来生成（縦の保証なし。実際にはここへは来ない想定）
+    return lengths.map(d => generateUniqueDigitNumber(d));
+}
  
 function createSingleMitori(digitCounts, isSubtractionProblem) {
     let digits = [];
     for (const k in digitCounts) for (let i = 0; i < digitCounts[k]; i++) digits.push(parseInt(k));
     digits.sort(() => Math.random() - 0.5);
-    let terms = digits.map(d => generateUniqueDigitNumber(d));
+    let terms = buildColumnUniqueTerms(digits, true);
  
     if (isSubtractionProblem) {
         const subCount = Math.random() < 0.5 ? 2 : 3;
@@ -1704,8 +1745,9 @@ function generateAnzanSet(total) {
         let terms = [], totalVal = 0;
  
         while(!valid) {
-            let p3 = [generateUniqueDigitNumber(3), generateUniqueDigitNumber(3)];
-            let p2 = [generateUniqueDigitNumber(2), generateUniqueDigitNumber(2), generateUniqueDigitNumber(2), generateUniqueDigitNumber(2)];
+            const builtAnz = buildColumnUniqueTerms([3, 3, 2, 2, 2, 2], true);
+            let p3 = builtAnz.slice(0, 2);
+            let p2 = builtAnz.slice(2);
             
             let posPool = [];
             let negPool = [];
