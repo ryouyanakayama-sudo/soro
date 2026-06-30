@@ -1606,12 +1606,60 @@ function generateUniqueDigitNumber(d) {
     }
     return parseInt(selected.join(''));
 }
+
+// 桁数の配列 lengths（例: [4,4,5,5,6,6,7,7]）を受け取り、各位（縦の列）で
+// 数字が重複しない正の整数の配列を返す。右揃え表示で同じ位に同じ数字が
+// 縦に並ばないようにするための関数（見取り算・暗算用）。
+// 可能な範囲で各数の中の数字重複も避ける（横方向）が、満たせない場合は
+// 縦方向の一意性を優先する。
+function generateColumnUniqueTerms(lengths) {
+    const n = lengths.length;
+    const maxLen = Math.max(...lengths);
+
+    const buildGrid = (avoidRowDup) => {
+        const grid = lengths.map(() => []);          // grid[i][p] = 位pの数字
+        const rowUsed = lengths.map(() => new Set()); // 各行ですでに使った数字
+        for (let p = 1; p <= maxLen; p++) {
+            // この位（右からp番目）を持つ項＝桁数がp以上の項
+            const occ = [];
+            for (let i = 0; i < n; i++) if (lengths[i] >= p) occ.push(i);
+            // 先頭桁（非ゼロ必須で制約が強い）の項を先に割り当てる
+            occ.sort((a, b) => (lengths[a] === p ? 0 : 1) - (lengths[b] === p ? 0 : 1));
+            const colUsed = new Set();
+            for (const i of occ) {
+                const isLead = (lengths[i] === p);
+                const cands = [];
+                for (let d = 0; d <= 9; d++) {
+                    if (colUsed.has(d)) continue;                    // 縦（列）で重複禁止
+                    if (isLead && d === 0) continue;                 // 先頭桁はゼロ不可
+                    if (avoidRowDup && rowUsed[i].has(d)) continue;  // 横（行内）も重複回避
+                    cands.push(d);
+                }
+                if (cands.length === 0) return null;                 // 行き詰まり→やり直し
+                const d = cands[Math.floor(Math.random() * cands.length)];
+                grid[i][p] = d;
+                colUsed.add(d);
+                rowUsed[i].add(d);
+            }
+        }
+        return lengths.map((len, i) => {
+            let v = 0;
+            for (let p = 1; p <= len; p++) v += (grid[i][p] || 0) * Math.pow(10, p - 1);
+            return v;
+        });
+    };
+
+    // まず縦＋横の両方で重複回避を試し、難しければ縦のみ保証に切り替える
+    for (let t = 0; t < 60; t++) { const r = buildGrid(true);  if (r) return r; }
+    for (let t = 0; t < 60; t++) { const r = buildGrid(false); if (r) return r; }
+    return lengths.map(d => generateUniqueDigitNumber(d)); // 最終フォールバック
+}
  
 function createSingleMitori(digitCounts, isSubtractionProblem) {
     let digits = [];
     for (const k in digitCounts) for (let i = 0; i < digitCounts[k]; i++) digits.push(parseInt(k));
     digits.sort(() => Math.random() - 0.5);
-    let terms = digits.map(d => generateUniqueDigitNumber(d));
+    let terms = generateColumnUniqueTerms(digits); // 各位（縦）で同じ数字が並ばないように生成
  
     if (isSubtractionProblem) {
         const subCount = Math.random() < 0.5 ? 2 : 3;
@@ -1716,8 +1764,10 @@ function generateAnzanSet(total) {
         let terms = [], totalVal = 0;
  
         while(!valid) {
-            let p3 = [generateUniqueDigitNumber(3), generateUniqueDigitNumber(3), generateUniqueDigitNumber(3), generateUniqueDigitNumber(3)];
-            let p2 = [generateUniqueDigitNumber(2), generateUniqueDigitNumber(2)];
+            // 各位（縦）で同じ数字が並ばないように6項を生成（3桁×4・2桁×2）
+            let _mags = generateColumnUniqueTerms([3,3,3,3,2,2]);
+            let p3 = _mags.slice(0, 4);
+            let p2 = _mags.slice(4, 6);
             
             let posPool = [];
             let negPool = [];
