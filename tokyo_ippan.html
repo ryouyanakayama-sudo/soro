@@ -305,6 +305,22 @@ function hasInternalDoubleZero(str) {
     for (let i = 1; i <= s.length - 3; i++) { if (s[i] === "0" && s[i+1] === "0" && (i+1) < s.length - 1) return true; }
     return false;
 }
+// A・B それぞれの中で同じ数字は2個まで、A と B を合わせて同じ数字は3個まで、
+// という制約を満たすか判定する。0 は無視し、1〜9 の数字だけを対象に数える。
+function digitCountsOf(str) {
+    const sig = String(str).replace(/[^1-9]/g, ''); // 0・符号・小数点などを除き、1〜9のみ数える
+    const counts = {};
+    for (const ch of sig) counts[ch] = (counts[ch] || 0) + 1;
+    return counts;
+}
+function passesDigitRepeatRule(aStr, bStr) {
+    const ca = digitCountsOf(aStr);
+    const cb = digitCountsOf(bStr);
+    for (const d in ca) if (ca[d] > 2) return false;                  // A内: 同じ数字2個まで
+    for (const d in cb) if (cb[d] > 2) return false;                  // B内: 同じ数字2個まで
+    for (const d in ca) if ((ca[d] + (cb[d] || 0)) > 3) return false; // A+B合計: 3個まで
+    return true;
+}
 function isBorderline(num, decimals) {
     const factor = Math.pow(10, decimals);
     const shifted = num * factor;
@@ -473,6 +489,7 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
             const aStr = makeSmallOperand(dA);
             const bStr = makeSmallOperand(dB);
             if (parseFloat(aStr) >= 1 || parseFloat(bStr) >= 1) continue;
+            if (!passesDigitRepeatRule(aStr, bStr)) continue; // A内・B内は同数字2個まで、A+Bは3個まで
             const A = parseFloat(aStr), B = parseFloat(bStr);
             if (!isFinite(A) || !isFinite(B) || A === 0 || B === 0) continue;
             const prod = A * B;
@@ -561,6 +578,7 @@ function generateMulProblem(isTop, forceSmallB = false, forceSmallDec = false, f
 
         if (countPatternDigitsFromString(aStr) !== dA || countPatternDigitsFromString(bStr) !== dB) continue;
         if (reqZero && !(hasInternalDoubleZero(aStr) || hasInternalDoubleZero(bStr))) continue;
+        if (!passesDigitRepeatRule(aStr, bStr)) continue; // A内・B内は同数字2個まで、A+Bは3個まで
 
         if (opts.forceContainsZeroA) {
             const aClean = aStr.replace(".", "");
