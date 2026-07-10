@@ -562,20 +562,176 @@ function genMulProblems(n){
   return probs;
 }
 
+// per-range spec for 除暗算 (division): dividend digit-count tendency, and how many of the
+// 10 problems in that range are integer÷integer, need rounding, or terminate exactly (no rounding).
+const divRanges = [
+  { from:1,  to:10, options:[5,6,7],    intCount:4, roundCount:4, subCount:1 },
+  { from:11, to:20, options:[6,7,8],    intCount:4, roundCount:4, subCount:2, subLeadZeroCount:1 },
+  { from:21, to:30, options:[6,7,8,9],  intCount:4, roundCount:4, subCount:0 },
+  { from:31, to:40, options:[9,10,11],  intCount:4, roundCount:5, subCount:0 },
+];
+
+// exact divisor (割る数) digit-count per problem number, per the reference breakdown
+const divBDigitsByNum = {
+  1:4, 2:3, 3:4, 4:3, 5:4, 6:4, 7:4, 8:3, 9:3, 10:3,
+  11:5, 12:4, 13:4, 14:3, 15:4, 16:4, 17:4, 18:5, 19:4, 20:3,
+  21:4, 22:5, 23:4, 24:4, 25:5, 26:5, 27:5, 28:4, 29:4, 30:5,
+  31:5, 32:5, 33:4, 34:5, 35:6, 36:4, 37:5, 38:5, 39:7, 40:6,
+};
+
+// distribute a group's digit-count options so the smallest option is rare (1-2 problems),
+// the largest is dominant (~70%), and any digit values in between share the remainder.
+function weightedDigitPlan(options, groupSize){
+  const smallestCount = randInt(1,2);
+  let largestCount = Math.round(groupSize * 0.7);
+  if(smallestCount + largestCount > groupSize) largestCount = groupSize - smallestCount;
+  let remaining = groupSize - smallestCount - largestCount;
+  const middleOptions = options.slice(1,-1);
+  const arr = [];
+  for(let i=0;i<smallestCount;i++) arr.push(options[0]);
+  for(let i=0;i<largestCount;i++) arr.push(options[options.length-1]);
+  if(middleOptions.length){
+    const base = Math.floor(remaining/middleOptions.length);
+    let extra = remaining - base*middleOptions.length;
+    middleOptions.forEach((m,i)=>{
+      const c = base + (i<extra?1:0);
+      for(let k=0;k<c;k++) arr.push(m);
+    });
+  } else {
+    for(let i=0;i<remaining;i++) arr.push(options[options.length-1]);
+  }
+  while(arr.length < groupSize) arr.push(options[options.length-1]);
+  while(arr.length > groupSize) arr.pop();
+  return shuffle(arr);
+}
+
+// does a/b actually need rounding at the 4th decimal, or does it terminate within 3 places?
+function needsRounding(a,b){
+  const scaled = a/b*1000;
+  return Math.abs(scaled - Math.round(scaled)) > 1e-6;
+}
+
+function hasUniqueDigits(value){
+  const digits = String(value).replace(/[^0-9]/g,'').split('');
+  return new Set(digits).size === digits.length;
+}
+
+// count "digits" the way this exam does: sub-1 numbers (0.xxx) count only the digits after
+// the decimal point; numbers >= 1 count every digit (integer part + decimal part combined).
+function examDigitCount(value, decPlaces){
+  if(value < 1){
+    return decPlaces;
+  }
+  const fixed = value.toFixed(decPlaces);
+  const [intPart, decPart=''] = fixed.split('.');
+  return intPart.length + decPart.length;
+}
+
+// a sub-1 number deliberately starting "0.0..." (first decimal digit forced to 0)
+function randSub1LeadZero(digits){
+  if(digits <= 1) return 0.01;
+  const pool = shuffle([1,2,3,4,5,6,7,8,9]).slice(0, digits-1);
+  return parseFloat('0.0' + pool.join(''));
+}
+
 function genDivProblems(n){
   const probs = [];
-  for(let i=0;i<n;i++){
-    const budget = randInt(6,10);
-    const aDigits = randInt(1, budget-1) || 1;
-    const bDigits = Math.max(budget - aDigits, 1);
-    const {int:aInt, dec:aDec} = splitIntDec(Math.min(aDigits,8), 4);
-    const {int:bInt, dec:bDec} = splitIntDec(Math.min(bDigits,6), 4);
-    let a = randNumber(aInt, aDec);
-    let b = randNumber(bInt, bDec);
-    if(b === 0) b = 1;
-    const ans = round3(a/b);
-    probs.push({ left: fmt(a, aDec), right: fmt(b, bDec), ans: fmt(ans) });
-  }
+  divRanges.forEach(range=>{
+    const groupSize = range.to - range.from + 1;
+    const noRoundCount = groupSize - range.intCount - range.roundCount;
+    let categories = shuffle([
+      ...Array(range.intCount).fill('int'),
+      ...Array(range.roundCount).fill('round'),
+      ...Array(noRoundCount).fill('noround'),
+    ]);
+    const digitPlan = weightedDigitPlan(range.options, groupSize);
+
+    // pick which slots get a sub-1 dividend; only decimal (non-'int') slots are eligible
+    const subCount = range.subCount || 0;
+    const eligible = [];
+    categories.forEach((c,i)=>{ if(c !== 'int') eligible.push(i); });
+    const subSlots = shuffle(eligible).slice(0, Math.min(subCount, eligible.length));
+    subSlots.forEach(slot=>{
+      if(categories[slot] !== 'round'){
+        const swapWith = categories.findIndex((c,i)=> c==='round' && !subSlots.includes(i) && i!==slot);
+        if(swapWith !== -1){
+          const tmp = categories[slot];
+          categories[slot] = 'round';
+          categories[swapWith] = tmp;
+        } else {
+          categories[slot] = 'round';
+        }
+      }
+    });
+    const subSlotSet = new Set(subSlots);
+    const leadZeroSlot = (range.subLeadZeroCount && subSlots.length) ? subSlots[0] : null;
+
+    for(let i=0;i<groupSize;i++){
+      const num = range.from + i;
+      const cat = categories[i];
+      const digits = digitPlan[i];
+      const isSub1 = subSlotSet.has(i);
+      const leadZero = (i === leadZeroSlot);
+      const bDigits = divBDigitsByNum[num];
+      let a, b, aDec, bDec;
+
+      if(cat === 'int'){
+        // build A = Q * B, but a product's digit-count isn't fully predictable from its
+        // factors' digit-counts, so verify against the exam's own digit-counting rule and retry
+        let best = null, bestScore = Infinity;
+        for(let t=0; t<60; t++){
+          const bCand = randNumberUnique(bDigits, 0);
+          const qDigitsGuess = Math.max(1, digits - bDigits + randInt(-1,1));
+          const qCand = randNumberUnique(qDigitsGuess, 0);
+          const aCand = qCand * bCand;
+          const diff = Math.abs(examDigitCount(aCand, 0) - digits);
+          const score = diff + (hasUniqueDigits(aCand) ? 0 : 100);
+          if(score < bestScore){ bestScore = score; best = { a: aCand, b: bCand }; }
+          if(score === 0) break;
+        }
+        a = best.a; b = best.b;
+        aDec = 0; bDec = 0;
+      } else if(cat === 'noround'){
+        let best = null, bestScore = Infinity, bestDec = 1;
+        for(let t=0; t<60; t++){
+          const bCand = randNumberUnique(bDigits, 0);
+          const qDecDigits = randInt(1,3);
+          const qIntDigitsGuess = Math.max(1, digits - bDigits + randInt(-1,1));
+          const qCand = randNumberUnique(qIntDigitsGuess, qDecDigits, {lastNonZero:true});
+          const aCand = round3(qCand * bCand);
+          const diff = Math.abs(examDigitCount(aCand, qDecDigits) - digits);
+          const score = diff + (hasUniqueDigits(aCand) ? 0 : 100);
+          if(score < bestScore){ bestScore = score; best = { a: aCand, b: bCand }; bestDec = qDecDigits; }
+          if(score === 0) break;
+        }
+        a = best.a; b = best.b; aDec = bestDec; bDec = 0;
+      } else { // round
+        let tries = 0;
+        do{
+          if(isSub1){
+            a = leadZero ? randSub1LeadZero(digits) : randSub1Unique(digits, {lastNonZero:true});
+            aDec = digits;
+            // pairing a sub-1 dividend with a sub-1 divisor keeps the quotient a sensible size
+            // (matches the reference exam, e.g. 0.1706812 ÷ 0.3907 = 0.437), and lets B still
+            // follow the exact per-problem digit-count spec
+            b = randSub1Unique(bDigits, {lastNonZero:true});
+            bDec = bDigits;
+          } else {
+            const aDecDigits = randInt(0, Math.min(4, digits-1));
+            const aIntDigits = digits - aDecDigits;
+            a = randNumberUnique(aIntDigits, aDecDigits, {lastNonZero:true});
+            aDec = aDecDigits;
+            b = randNumberUnique(bDigits, 0);
+            bDec = 0;
+          }
+          tries++;
+        } while((!needsRounding(a,b) || Math.abs(round3(a/b)) < 0.01) && tries < 60);
+      }
+
+      const ans = round3(a/b);
+      probs.push({ left: fmt(a, aDec), right: fmt(b, bDec), ans: fmt(ans) });
+    }
+  });
   return probs;
 }
 
