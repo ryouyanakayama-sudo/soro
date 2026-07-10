@@ -197,8 +197,8 @@
         <div id="view-problem" class="view-section active">
             
             <div class="sheet">
-                <div class="sheet-header">打倒MAX～全関東珠算選手権～</div>
-                <div class="sub-header">乗算 (制限時間 6分)</div>
+                <div class="sheet-header">打倒MAX～東京珠算選手権～</div>
+                <div class="sub-header">乗算 (制限時間 5分)</div>
                 <div class="calc-wrapper">
                     <div class="calc-col" id="kake-left"></div>
                     <div class="calc-col" id="kake-right"></div>
@@ -206,8 +206,8 @@
             </div>
 
             <div class="sheet">
-                <div class="sheet-header">打倒MAX～全関東珠算選手権～</div>
-                <div class="sub-header">除算 (制限時間 6分)</div>
+                <div class="sheet-header">打倒MAX～東京珠算選手権～</div>
+                <div class="sub-header">除算 (制限時間 5分)</div>
                 <div class="calc-wrapper">
                     <div class="calc-col" id="wari-left"></div>
                     <div class="calc-col" id="wari-right"></div>
@@ -215,14 +215,14 @@
             </div>
 
             <div class="sheet">
-                <div class="sheet-header">打倒MAX～全関東珠算選手権～</div>
-                <div class="sub-header">みとり算 (制限時間 6分)</div>
+                <div class="sheet-header">打倒MAX～東京珠算選手権～</div>
+                <div class="sub-header">みとり算 (制限時間 5分)</div>
                 <div class="mitori-wrapper mitori-normal" id="mitori-area"></div>
             </div>
 
             <div class="sheet">
-                <div class="sheet-header">打倒MAX～全関東珠算選手権～</div>
-                <div class="sub-header">暗算 (制限時間 2分30秒)</div>
+                <div class="sheet-header">打倒MAX～東京珠算選手権～</div>
+                <div class="sub-header">暗算 (制限時間 1分30秒)</div>
                 <div class="mitori-wrapper mitori-anzan" id="anzan-area"></div>
                 <div class="score-box">
                     <table class="score-table">
@@ -1579,6 +1579,32 @@ function countBorrows(terms) {
     return totalBorrows;
 }
  
+// 「同一の3桁ブロック内」で発生する借り(1000を借りる操作)の最大回数を返す。
+// 例: 下3桁ブロックで一度 1000 を借りて引いた後、後続の引き算で
+// さらにもう一度 1000 を借りる必要がある場合 → そのブロックの借りは2回。
+// 3桁ブロックでは1つの項で引ける最大は999なので、借り2回は必ず
+// 「別々の項で2度借りる」ことを意味する(ユーザー要望のパターンと一致)。
+function maxBorrowsInOneBlock(terms) {
+    let maxB = 0;
+    const numBlocks = 4;
+    for (let b = 0; b < numBlocks; b++) {
+        const divisor = Math.pow(1000, b);
+        const blockTerms = terms.map(t => {
+            const sign = t < 0 ? -1 : 1;
+            const block = Math.floor(Math.abs(t) / divisor) % 1000;
+            return sign * block;
+        });
+        if (blockTerms.every(v => v === 0)) continue;
+        let acc = 0, cnt = 0;
+        for (const v of blockTerms) {
+            acc += v;
+            while (acc < 0) { acc += 1000; cnt++; }
+        }
+        if (cnt > maxB) maxB = cnt;
+    }
+    return maxB;
+}
+ 
 function calculateFingeringCount(state, delta) {
     if (delta === 0) return 0;
     const next = state + delta;
@@ -1709,7 +1735,10 @@ function generateForcedBorrowProblem(minBorrows, usedKeys) {
         const p = createSingleMitori(config, true);
  
         if (p.answer <= 0) continue;
-        if (p.borrows < minBorrows) continue;
+        // 運指数の足切り(通常生成と同じ下限)。ただし3回借り問題は
+        // 構造上運指数が低めに出やすく、借り直し自体が超難問なので免除する。
+        if (minBorrows < 3 && p.totalFingering < 68) continue;
+        if (maxBorrowsInOneBlock(p.terms) < minBorrows) continue; // 同一ブロック内で minBorrows 回以上の借り
  
         const key = JSON.stringify(p.terms);
         if (usedKeys.has(key)) continue;
@@ -1723,6 +1752,7 @@ function generateMitoriSet(total) {
     const list = [];
     const usedKeys = new Set();
     const minSub = total >= 30 ? 5 : (total < 20 ? 2 : 3); // 30問版: 従来3の約1.5倍
+    const MIN_FINGERING = 68; // 運指数の足切り(下位約25%を排除し、軽い問題を出さない)
  
     for (let i = 0; i < total; i++) {
         const config = Math.random() < 0.5 ? {4:2, 5:2, 6:2, 7:2} : {5:4, 6:4};
@@ -1733,7 +1763,7 @@ function generateMitoriSet(total) {
             p = createSingleMitori(config, isSub);
             key = JSON.stringify(p.terms);
             tries--;
-        } while (usedKeys.has(key) && tries > 0);
+        } while ((usedKeys.has(key) || p.totalFingering < MIN_FINGERING) && tries > 0);
         usedKeys.add(key);
         list.push({ 
             no: i+1, 
@@ -1744,20 +1774,105 @@ function generateMitoriSet(total) {
         });
     }
  
-    const hasDouble = list.some(p => p.borrows >= 2);
-    if (!hasDouble) {
+    // 「同一の3桁ブロック内で1000を2回以上借りる」問題を最低2問保証する。
+    // (例: ブロック内で借りて引いた後、後続の引き算でさらにもう一度借りる)
+    let qualified = list.filter(p => maxBorrowsInOneBlock(p.terms) >= 2).length;
+    let guard = 20;
+    while (qualified < 2 && guard-- > 0) {
         const replaced = generateForcedBorrowProblem(2, usedKeys);
-        if (replaced) {
-            const targetIdx = randInt(0, total - 1);
-            usedKeys.delete(JSON.stringify(list[targetIdx].terms));
-            list[targetIdx] = {
-                no: list[targetIdx].no,
-                terms: replaced.terms,
-                answer: addCommas(replaced.answer),
-                fingering: replaced.totalFingering,
-                borrows: replaced.borrows
+        if (!replaced) break;
+        // まだ条件を満たしていない問題の中からランダムに1問差し替える
+        const candidates = [];
+        for (let i = 0; i < list.length; i++) {
+            if (maxBorrowsInOneBlock(list[i].terms) < 2) candidates.push(i);
+        }
+        if (candidates.length === 0) break;
+        const targetIdx = candidates[randInt(0, candidates.length - 1)];
+        usedKeys.delete(JSON.stringify(list[targetIdx].terms));
+        list[targetIdx] = {
+            no: list[targetIdx].no,
+            terms: replaced.terms,
+            answer: addCommas(replaced.answer),
+            fingering: replaced.totalFingering,
+            borrows: replaced.borrows
+        };
+        usedKeys.add(JSON.stringify(replaced.terms));
+        qualified++;
+    }
+ 
+    // 「同一ブロック内で1000を3回借りる」超難問を50問に1問の割合で混ぜる。
+    // 30問セットなら確率 30/50 = 60% で1問だけ。上限も1問(自然発生で
+    // 2問以上出た場合は1問残して他を通常問題に差し替える)。
+    // 引き算の項数は通常と同じ(2〜3個)のまま、自然に条件を満たすものだけ採用。
+    const tripleIdxs = [];
+    for (let i = 0; i < list.length; i++) {
+        if (maxBorrowsInOneBlock(list[i].terms) >= 3) tripleIdxs.push(i);
+    }
+    if (tripleIdxs.length === 0) {
+        if (Math.random() < total / 50) {
+            const triple = generateForcedBorrowProblem(3, usedKeys);
+            if (triple) {
+                // 2回借り保証(最低2問)を壊さないよう、条件未達の問題を優先して差し替える
+                let pool = [];
+                for (let i = 0; i < list.length; i++) {
+                    if (maxBorrowsInOneBlock(list[i].terms) < 2) pool.push(i);
+                }
+                if (pool.length === 0) pool = list.map((_, i) => i);
+                const targetIdx = pool[randInt(0, pool.length - 1)];
+                usedKeys.delete(JSON.stringify(list[targetIdx].terms));
+                list[targetIdx] = {
+                    no: list[targetIdx].no,
+                    terms: triple.terms,
+                    answer: addCommas(triple.answer),
+                    fingering: triple.totalFingering,
+                    borrows: triple.borrows
+                };
+                usedKeys.add(JSON.stringify(triple.terms));
+            }
+        }
+    } else if (tripleIdxs.length >= 2) {
+        // 自然発生で2問以上 → 1問だけ残し、残りは3回借りでない問題に差し替える
+        tripleIdxs.sort(() => Math.random() - 0.5);
+        for (let k = 1; k < tripleIdxs.length; k++) {
+            const idx = tripleIdxs[k];
+            let repl = null, tries = 2000;
+            while (tries--) {
+                const config = Math.random() < 0.5 ? {4:2, 5:2, 6:2, 7:2} : {5:4, 6:4};
+                const cand = createSingleMitori(config, maxBorrowsInOneBlock(list[idx].terms) >= 2 ? true : (Math.random() < 0.4));
+                if (cand.totalFingering < 68) continue; // 運指数の足切り
+                if (maxBorrowsInOneBlock(cand.terms) >= 3) continue; // 3回借りは1問のみ
+                const key = JSON.stringify(cand.terms);
+                if (usedKeys.has(key)) continue;
+                repl = cand; break;
+            }
+            if (!repl) continue;
+            usedKeys.delete(JSON.stringify(list[idx].terms));
+            list[idx] = {
+                no: list[idx].no,
+                terms: repl.terms,
+                answer: addCommas(repl.answer),
+                fingering: repl.totalFingering,
+                borrows: repl.borrows
             };
-            usedKeys.add(JSON.stringify(replaced.terms));
+            usedKeys.add(JSON.stringify(repl.terms));
+        }
+        // 差し替えで2回借り2問保証が崩れていないか最終確認し、必要なら補充
+        let q2 = list.filter(p => maxBorrowsInOneBlock(p.terms) >= 2).length;
+        let g2 = 10;
+        while (q2 < 2 && g2-- > 0) {
+            const rep2 = generateForcedBorrowProblem(2, usedKeys);
+            if (!rep2) break;
+            if (maxBorrowsInOneBlock(rep2.terms) >= 3) continue; // 3回借りは増やさない
+            const pool2 = [];
+            for (let i = 0; i < list.length; i++) {
+                if (maxBorrowsInOneBlock(list[i].terms) < 2) pool2.push(i);
+            }
+            if (pool2.length === 0) break;
+            const ti = pool2[randInt(0, pool2.length - 1)];
+            usedKeys.delete(JSON.stringify(list[ti].terms));
+            list[ti] = { no: list[ti].no, terms: rep2.terms, answer: addCommas(rep2.answer), fingering: rep2.totalFingering, borrows: rep2.borrows };
+            usedKeys.add(JSON.stringify(rep2.terms));
+            q2++;
         }
     }
  
@@ -1968,8 +2083,35 @@ function generateAll() {
     globalData.div = generateDivSet(30);
     globalData.mit = generateMitoriSet(30);
     globalData.anz = generateAnzanSet(30);
+    saveCurrentProblems();
     renderSheets();
     if(document.getElementById('view-answer').classList.contains('active')) renderAnswerTable();
+}
+
+// 現在の問題セットを保存する。ページが自動リロードされても
+// 「全種目 新規作成」を押すまでは同じ問題が表示され続けるようにするため。
+function saveCurrentProblems() {
+    try {
+        localStorage.setItem('sorobanCurrentSet', JSON.stringify(globalData));
+    } catch(e) { /* 保存失敗時は諦める(表示には影響しない) */ }
+}
+
+// 保存済みの問題セットがあれば復元する。成功したら true を返す。
+function restoreCurrentProblems() {
+    try {
+        const raw = localStorage.getItem('sorobanCurrentSet');
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        // 形式チェック: 4種目とも配列で、問題が入っていること
+        if (!data || !Array.isArray(data.mul) || !Array.isArray(data.div) ||
+            !Array.isArray(data.mit) || !Array.isArray(data.anz)) return false;
+        if (data.mul.length === 0 || data.div.length === 0 ||
+            data.mit.length === 0 || data.anz.length === 0) return false;
+        globalData = data;
+        return true;
+    } catch(e) {
+        return false;
+    }
 }
 
 function generateFromMistakes() {
@@ -1993,6 +2135,7 @@ function generateFromMistakes() {
     globalData.mit = fill(eM, 30, generateMitoriSet);
     globalData.anz = fill(eA, 30, generateAnzanSet);
 
+    saveCurrentProblems();
     renderSheets();
     switchView('problem');
     alert("弱点データから問題を作成しました（足りない分は新規生成で補填されています）。");
@@ -2014,7 +2157,13 @@ function switchView(view) {
 }
 
 window.onload = () => {
-    generateAll();
+    // 保存済みの問題があれば復元(自動リロード対策)。
+    // 新しい問題は「全種目 新規作成」を押したときだけ生成される。
+    if (restoreCurrentProblems()) {
+        renderSheets();
+    } else {
+        generateAll();
+    }
     updateCounts();
 };
 </script>
